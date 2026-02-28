@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CirclePlusIcon, PanelLeftIcon, MessageIcon, BellIcon, SwarmIcon, ArrowUpCircleIcon, LifeBuoyIcon } from './icons.js';
-import { getUnreadNotificationCount, getAppVersion } from '../actions.js';
+import { CirclePlusIcon, PanelLeftIcon, MessageIcon, BellIcon, SwarmIcon, ArrowUpCircleIcon, LifeBuoyIcon, GitPullRequestIcon } from './icons.js';
+import { getUnreadNotificationCount, getPullRequestCount, getAppVersion } from '../actions.js';
 import { SidebarHistory } from './sidebar-history.js';
 import { SidebarUserNav } from './sidebar-user-nav.js';
 import { UpgradeDialog } from './upgrade-dialog.js';
@@ -26,15 +26,29 @@ export function AppSidebar({ user }) {
   const { state, open, setOpenMobile, toggleSidebar } = useSidebar();
   const collapsed = state === 'collapsed';
   const [unreadCount, setUnreadCount] = useState(0);
+  const [prCount, setPrCount] = useState(0);
   const [version, setVersion] = useState('');
   const [updateAvailable, setUpdateAvailable] = useState(null);
   const [changelog, setChangelog] = useState(null);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
+  // Fetch badge counts (notifications + PRs) — run immediately, then every 10 minutes
   useEffect(() => {
-    getUnreadNotificationCount()
-      .then((count) => setUnreadCount(count))
-      .catch(() => {});
+    function fetchCounts() {
+      getUnreadNotificationCount()
+        .then((count) => setUnreadCount(count))
+        .catch(() => {});
+      getPullRequestCount()
+        .then((count) => setPrCount(count))
+        .catch(() => {});
+    }
+    fetchCounts();
+    const interval = setInterval(fetchCounts, 10 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Version check — one-time on mount
+  useEffect(() => {
     getAppVersion()
       .then(({ version, updateAvailable, changelog }) => {
         setVersion(version);
@@ -160,6 +174,40 @@ export function AppSidebar({ user }) {
               </TooltipTrigger>
               {collapsed && (
                 <TooltipContent side="right">Notifications</TooltipContent>
+              )}
+            </Tooltip>
+          </SidebarMenuItem>
+
+          {/* Pull Requests */}
+          <SidebarMenuItem>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <SidebarMenuButton
+                  className={collapsed ? 'justify-center' : ''}
+                  onClick={() => {
+                    window.location.href = '/pull-requests';
+                  }}
+                >
+                  <GitPullRequestIcon size={16} />
+                  {!collapsed && (
+                    <span className="flex items-center gap-2">
+                      Pull Requests
+                      {prCount > 0 && (
+                        <span className="inline-flex items-center justify-center rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-medium leading-none text-destructive-foreground">
+                          {prCount}
+                        </span>
+                      )}
+                    </span>
+                  )}
+                  {collapsed && prCount > 0 && (
+                    <span className="absolute -top-1 -right-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground">
+                      {prCount}
+                    </span>
+                  )}
+                </SidebarMenuButton>
+              </TooltipTrigger>
+              {collapsed && (
+                <TooltipContent side="right">Pull Requests</TooltipContent>
               )}
             </Tooltip>
           </SidebarMenuItem>
