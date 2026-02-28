@@ -24,6 +24,10 @@ jobs:
 
       - run: npm ci
 
+      - name: Extract version
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
       - name: Detect release channel
         id: channel
         run: |
@@ -35,7 +39,51 @@ jobs:
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "Publishing $(node -p "require('./package.json').version") to dist-tag: $TAG"
 
-      - run: npm publish --tag ${{ steps.channel.outputs.tag }}
+      # Publish with a temporary tag so it doesn't become "latest" yet.
+      # Docker images are built next — the NPM dist-tag is promoted only
+      # after all images are successfully pushed.
+      - name: Publish to npm (prerelease tag)
+        run: npm publish --tag prerelease
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Build and push Event Handler image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: templates/docker/event-handler/Dockerfile
+          push: true
+          tags: stephengpope/thepopebot:event-handler-${{ steps.version.outputs.version }}
+
+      - name: Build and push Pi Coding Agent image
+        uses: docker/build-push-action@v6
+        with:
+          context: templates/docker/job-pi-coding-agent
+          file: templates/docker/job-pi-coding-agent/Dockerfile
+          push: true
+          tags: stephengpope/thepopebot:job-pi-coding-agent-${{ steps.version.outputs.version }}
+
+      - name: Build and push Claude Code image
+        uses: docker/build-push-action@v6
+        with:
+          context: templates/docker/job-claude-code
+          file: templates/docker/job-claude-code/Dockerfile
+          push: true
+          tags: stephengpope/thepopebot:job-claude-code-${{ steps.version.outputs.version }}
+
+      # All Docker images pushed — promote the NPM dist-tag from "prerelease"
+      # to the final channel tag (e.g., "latest" for stable, "beta" for betas).
+      - name: Promote NPM dist-tag
+        run: npm dist-tag add thepopebot@${{ steps.version.outputs.version }} ${{ steps.channel.outputs.tag }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
