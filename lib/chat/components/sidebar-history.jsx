@@ -104,10 +104,10 @@ export function SidebarHistory() {
     }
   }, []);
 
-  // Load chats on mount and refresh when navigating between pages
+  // Load chats on mount (chatsupdated event handles subsequent updates)
   useEffect(() => {
     loadChats();
-  }, [activeChatId]);
+  }, []);
 
   // Reload when chats change (new chat created or title updated)
   useEffect(() => {
