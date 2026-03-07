@@ -217,7 +217,7 @@ export function ClusterConsolePage({ session, clusterId }) {
 }
 
 function WorkerTile({ worker, stats, logs, logVersion, roles }) {
-  const [mode, setMode] = useState('claude'); // 'console' | 'claude'
+  const [mode, setMode] = useState('code'); // 'console' | 'code'
   const [running, setRunning] = useState(false);
   const [stopping, setStopping] = useState(false);
   const [expandedTools, setExpandedTools] = useState(new Set());
@@ -290,10 +290,10 @@ function WorkerTile({ worker, stats, logs, logVersion, roles }) {
             Console
           </button>
           <button
-            onClick={() => setMode('claude')}
-            className={`px-2 py-1 text-xs transition-colors ${mode === 'claude' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
+            onClick={() => setMode('code')}
+            className={`px-2 py-1 text-xs transition-colors ${mode === 'code' ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'}`}
           >
-            Claude
+            Code
           </button>
         </div>
       </div>
@@ -322,7 +322,7 @@ function WorkerTile({ worker, stats, logs, logVersion, roles }) {
               </div>
             );
           }
-          return <ClaudeLogView logs={filtered} expandedTools={expandedTools} toggleTool={toggleTool} />;
+          return <CodeLogView logs={filtered} expandedTools={expandedTools} toggleTool={toggleTool} />;
         })()}
         <div ref={logEndRef} />
       </div>
@@ -330,7 +330,7 @@ function WorkerTile({ worker, stats, logs, logVersion, roles }) {
   );
 }
 
-function ClaudeLogView({ logs, expandedTools, toggleTool }) {
+function CodeLogView({ logs, expandedTools, toggleTool }) {
   // Build a map of tool results by toolCallId for nesting
   const toolResults = new Map();
   for (const entry of logs) {
@@ -410,10 +410,10 @@ function StatsPanel({ workers, stats, roles }) {
   }
 
   return (
-    <div className="shrink-0 border-t border-border bg-zinc-950 text-zinc-300 font-mono text-xs overflow-x-auto">
+    <div className="shrink-0 border-t border-border bg-muted font-mono text-xs overflow-x-auto">
       <table className="w-full">
         <thead>
-          <tr className="border-b border-zinc-800 text-zinc-500">
+          <tr className="border-b border-border text-muted-foreground">
             <th className="text-left px-3 py-1.5 font-medium">WORKER</th>
             <th className="text-right px-3 py-1.5 font-medium w-20">CPU %</th>
             <th className="text-right px-3 py-1.5 font-medium w-32">MEM</th>
@@ -427,11 +427,11 @@ function StatsPanel({ workers, stats, roles }) {
             const isRunning = s?.running;
             const roleName = roles?.find((r) => r.id === w.clusterRoleId)?.roleName;
             return (
-              <tr key={w.id} className="border-b border-zinc-900 last:border-0">
+              <tr key={w.id} className="border-b border-border last:border-0">
                 <td className="px-3 py-1">
-                  <span className="text-zinc-500">{shortId(w)}</span>{' '}
-                  <span>{w.name || 'Worker'}</span>
-                  {roleName && <span className="text-zinc-600 ml-1">({roleName})</span>}
+                  <span className="text-muted-foreground">{shortId(w)}</span>{' '}
+                  <span className="text-foreground">{w.name || 'Worker'}</span>
+                  {roleName && <span className="text-muted-foreground/60 ml-1">({roleName})</span>}
                 </td>
                 <td className="text-right px-3 py-1">{isRunning ? `${(s.cpu || 0).toFixed(1)}%` : '—'}</td>
                 <td className="text-right px-3 py-1">
@@ -442,13 +442,13 @@ function StatsPanel({ workers, stats, roles }) {
                 </td>
                 <td className="text-right px-3 py-1">
                   {isRunning
-                    ? <span className="text-green-400">RUN</span>
-                    : <span className="text-zinc-600">STOP</span>}
+                    ? <span className="text-green-600 dark:text-green-400">RUN</span>
+                    : <span className="text-muted-foreground/60">STOP</span>}
                 </td>
               </tr>
             );
           })}
-          <tr className="border-t border-zinc-700 text-zinc-400 font-medium">
+          <tr className="border-t border-border text-muted-foreground font-medium">
             <td className="px-3 py-1.5">TOTAL ({totalRunning}/{workers.length})</td>
             <td className="text-right px-3 py-1.5">{totalCpu.toFixed(1)}%</td>
             <td className="text-right px-3 py-1.5">{formatBytes(totalMem)}</td>
