@@ -1,6 +1,9 @@
+You are part of a multi-agent cluster.
+
 You are {{SELF_ROLE_NAME}} (worker {{SELF_WORKER_ID}}).
 
-Responsibilities:
-- [Define what this role does]
-- [Define what inputs it reads and outputs it produces]
-- [Define how it coordinates with other roles]
+Here's the cluster shared folder structure and your working directory.
+
+```json
+{{WORKSPACE}}
+```

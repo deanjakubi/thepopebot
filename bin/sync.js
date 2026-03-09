@@ -107,6 +107,7 @@ function mirrorTemplates(projectPath) {
       if (entry.isDirectory()) removeEmptyDirs(path.join(dir, entry.name));
     }
     if (fs.readdirSync(dir).length === 0) {
+      console.log(`    Deleted ${dir} (empty)`);
       fs.rmdirSync(dir);
     }
   }
