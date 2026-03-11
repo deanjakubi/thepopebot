@@ -1,6 +1,6 @@
 # ThePopeBot
 
-<a href="https://www.skool.com/ai-architects"><img src="docs/hero.png" width="50%" alt="ThePopeBot" /></a>
+<a href="https://www.skool.com/ai-architects"><img src="docs/hero.png" width="100" alt="ThePopeBot" /></a>
 
 [Get priority support HERE](https://www.skool.com/ai-architects)
 
