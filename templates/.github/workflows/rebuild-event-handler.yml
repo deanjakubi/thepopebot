@@ -22,6 +22,8 @@ jobs:
             gh auth setup-git
 
             git config --global --add safe.directory /project
+            git -C /project config user.name "thepopebot"
+            git -C /project config user.email "thepopebot@users.noreply.github.com"
             git -C /project fetch origin main
             CHANGED=$(git -C /project diff --name-only HEAD origin/main)
             if ! echo "$CHANGED" | grep -qv "^logs/"; then
@@ -73,7 +75,7 @@ jobs:
         if: steps.pull.outputs.status == 'VERSION_CHANGED'
         run: |
           HOST_DIR=$(docker inspect thepopebot-event-handler --format '{{index .Config.Labels "com.docker.compose.project.working_dir"}}')
-          docker compose -f /project/docker-compose.yml --project-directory "$HOST_DIR" --env-file /project/.env pull event-handler
+          docker compose --project-directory "$HOST_DIR" --env-file "$HOST_DIR/.env" pull event-handler
           docker stop thepopebot-event-handler || true
           docker rm thepopebot-event-handler || true
-          docker compose -f /project/docker-compose.yml --project-directory "$HOST_DIR" --env-file /project/.env up -d event-handler
+          docker compose --project-directory "$HOST_DIR" --env-file "$HOST_DIR/.env" up -d event-handler
