@@ -21,6 +21,7 @@ jobs:
             echo "${GH_TOKEN}" | gh auth login --with-token
             gh auth setup-git
 
+            git config --global --add safe.directory /project
             git -C /project fetch origin main
             CHANGED=$(git -C /project diff --name-only HEAD origin/main)
             if ! echo "$CHANGED" | grep -qv "^logs/"; then

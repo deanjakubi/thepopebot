@@ -24,6 +24,7 @@ jobs:
             echo "${GH_TOKEN}" | gh auth login --with-token
             gh auth setup-git
 
+            git config --global --add safe.directory /project
             REPO_URL=$(git -C /project remote get-url origin)
             WORK_DIR=$(mktemp -d)
             git clone --depth 1 "$REPO_URL" "$WORK_DIR"
