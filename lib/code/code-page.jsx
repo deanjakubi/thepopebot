@@ -10,7 +10,7 @@ import { SidebarProvider, SidebarInset } from '../chat/components/ui/sidebar.js'
 import { ChatNavProvider } from '../chat/components/chat-nav-context.js';
 import { ChatHeader } from '../chat/components/chat-header.js';
 import { ConfirmDialog } from '../chat/components/ui/confirm-dialog.js';
-import { CodeIcon, TerminalIcon, SpinnerIcon } from '../chat/components/icons.js';
+import { CodeIcon, TerminalIcon, EditorIcon, SpinnerIcon } from '../chat/components/icons.js';
 import { cn } from '../chat/utils.js';
 import {
   ensureCodeWorkspaceContainer,
@@ -22,6 +22,7 @@ import {
 } from './actions.js';
 
 const TerminalView = dynamic(() => import('./terminal-view.js'), { ssr: false });
+const EditorView = dynamic(() => import('./editor-view.js'), { ssr: false });
 
 function getStorageKey(id) {
   return `code-tab-order-${id}`;
@@ -74,6 +75,7 @@ export default function CodePage({ session, codeWorkspaceId }) {
   const [activeTabId, setActiveTabId] = useState(PRIMARY_TAB_ID);
   const [creatingShell, setCreatingShell] = useState(false);
   const [creatingCode, setCreatingCode] = useState(false);
+  const [creatingEditor, setCreatingEditor] = useState(false);
   const [closingTabId, setClosingTabId] = useState(null);
 
   const sensors = useSensors(
@@ -134,15 +136,32 @@ export default function CodePage({ session, codeWorkspaceId }) {
     }
   }, [codeWorkspaceId]);
 
+  const handleNewEditor = useCallback(() => {
+    setCreatingEditor(true);
+    // Editor tabs are purely client-side — no container process needed
+    const sessionId = `editor-${Date.now().toString(36)}`;
+    // Count existing editor tabs for labeling
+    const editorCount = tabs.filter((t) => t.type === 'editor').length;
+    const label = `Editor ${editorCount + 1}`;
+    const newTab = { id: sessionId, label, type: 'editor' };
+    setTabs((prev) => [...prev, newTab]);
+    setActiveTabId(sessionId);
+    setCreatingEditor(false);
+  }, [tabs]);
+
   const handleCloseTab = useCallback(async (tabId) => {
-    try {
-      await closeTerminalSession(codeWorkspaceId, tabId);
-    } catch {
-      // Best effort
+    const tab = tabs.find((t) => t.id === tabId);
+    // Editor tabs have no container process — skip terminal cleanup
+    if (tab?.type !== 'editor') {
+      try {
+        await closeTerminalSession(codeWorkspaceId, tabId);
+      } catch {
+        // Best effort
+      }
     }
     setTabs((prev) => prev.filter((t) => t.id !== tabId));
     setActiveTabId((prev) => (prev === tabId ? PRIMARY_TAB_ID : prev));
-  }, [codeWorkspaceId]);
+  }, [codeWorkspaceId, tabs]);
 
   const handleOpenCloseDialog = useCallback(async () => {
     setDialogState('loading');
@@ -221,7 +240,9 @@ export default function CodePage({ session, codeWorkspaceId }) {
 
   // Look up closing tab type for the confirm dialog description
   const closingTab = closingTabId ? tabs.find((t) => t.id === closingTabId) : null;
-  const closingTabDescription = closingTab?.type === 'code'
+  const closingTabDescription = closingTab?.type === 'editor'
+    ? 'This will close the editor tab. Unsaved changes will be lost.'
+    : closingTab?.type === 'code'
     ? 'This will end the code session.'
     : 'This will end the shell session.';
 
@@ -274,6 +295,12 @@ export default function CodePage({ session, codeWorkspaceId }) {
                   <span>Shell...</span>
                 </div>
               )}
+              {creatingEditor && (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium font-mono text-muted-foreground">
+                  <SpinnerIcon size={12} />
+                  <span>Editor...</span>
+                </div>
+              )}
 
               {/* + buttons */}
               <button
@@ -292,9 +319,17 @@ export default function CodePage({ session, codeWorkspaceId }) {
               >
                 + Shell
               </button>
+              <button
+                className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium font-mono text-muted-foreground hover:text-foreground rounded-t-md border-t border-x border-dashed border-t-muted-foreground/30 border-x-muted-foreground/20 hover:border-t-muted-foreground/50 hover:border-x-muted-foreground/40 transition-all disabled:opacity-50 disabled:cursor-default"
+                onClick={handleNewEditor}
+                disabled={creatingEditor}
+                title="New file editor"
+              >
+                + Editor
+              </button>
             </div>
 
-            {/* Terminal panels — all mounted, hidden via display */}
+            {/* Tab content panels — all mounted, hidden via display */}
             {tabs.map((tab) => (
               <div
                 key={tab.id}
@@ -305,17 +340,21 @@ export default function CodePage({ session, codeWorkspaceId }) {
                   minHeight: 0,
                 }}
               >
-                <TerminalView
-                  codeWorkspaceId={codeWorkspaceId}
-                  wsPath={tab.primary
-                    ? `/code/${codeWorkspaceId}/ws`
-                    : `/code/${codeWorkspaceId}/term/${tab.id}/ws`}
-                  isActive={activeTabId === tab.id}
-                  showToolbar={true}
-                  ensureContainer={tab.primary ? ensureCodeWorkspaceContainer : undefined}
-                  onCloseSession={tab.primary ? handleOpenCloseDialog : () => setClosingTabId(tab.id)}
-                  closeLabel={tab.primary ? 'Close Session' : 'Close Tab'}
-                />
+                {tab.type === 'editor' ? (
+                  <EditorView codeWorkspaceId={codeWorkspaceId} />
+                ) : (
+                  <TerminalView
+                    codeWorkspaceId={codeWorkspaceId}
+                    wsPath={tab.primary
+                      ? `/code/${codeWorkspaceId}/ws`
+                      : `/code/${codeWorkspaceId}/term/${tab.id}/ws`}
+                    isActive={activeTabId === tab.id}
+                    showToolbar={true}
+                    ensureContainer={tab.primary ? ensureCodeWorkspaceContainer : undefined}
+                    onCloseSession={tab.primary ? handleOpenCloseDialog : () => setClosingTabId(tab.id)}
+                    closeLabel={tab.primary ? 'Close Session' : 'Close Tab'}
+                  />
+                )}
               </div>
             ))}
           </div>
@@ -393,7 +432,7 @@ function PinnedTab({ tab, isActive, onClick, onClose, closeTitle }) {
       )}
       onClick={onClick}
     >
-      {tab.type === 'code' ? <CodeIcon size={12} /> : <TerminalIcon size={12} />}
+      {tab.type === 'editor' ? <EditorIcon size={12} /> : tab.type === 'code' ? <CodeIcon size={12} /> : <TerminalIcon size={12} />}
       <span>{tab.label}</span>
       <button
         className="ml-1 rounded-sm p-0.5 hover:bg-destructive/20 hover:text-destructive transition-all"
@@ -433,7 +472,7 @@ function SortableTab({ tab, isActive, onClick, onClose }) {
       )}
       onClick={onClick}
     >
-      {tab.type === 'code' ? <CodeIcon size={12} /> : <TerminalIcon size={12} />}
+      {tab.type === 'editor' ? <EditorIcon size={12} /> : tab.type === 'code' ? <CodeIcon size={12} /> : <TerminalIcon size={12} />}
       <span>{tab.label}</span>
       <button
         className="ml-1 rounded-sm p-0.5 hover:bg-destructive/20 hover:text-destructive transition-all"
@@ -441,7 +480,7 @@ function SortableTab({ tab, isActive, onClick, onClose }) {
           e.stopPropagation();
           onClose();
         }}
-        title={tab.type === 'code' ? 'Close code tab' : 'Close shell'}
+        title={tab.type === 'editor' ? 'Close editor' : tab.type === 'code' ? 'Close code tab' : 'Close shell'}
       >
         <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
           <line x1="4" y1="4" x2="12" y2="12" />
