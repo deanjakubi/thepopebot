@@ -19,7 +19,7 @@ docker build --platform linux/amd64 -t coding-agent-base "$SCRIPT_DIR"
 # ── Build pi image ──
 echo ""
 echo "Building pi image..."
-docker build --platform linux/amd64 -t coding-agent-pi -f "$SCRIPT_DIR/Dockerfile.pi" "$SCRIPT_DIR"
+docker build --platform linux/amd64 -t coding-agent-pi -f "$SCRIPT_DIR/Dockerfile.pi-coding-agent" "$SCRIPT_DIR"
 
 # ── Run headless test (plan mode equivalent — no feature branch = read-only) ──
 echo ""

@@ -10,7 +10,7 @@ const TABS = [
   { id: 'crons', label: 'Crons', href: '/admin/crons', icon: ClockIcon },
   { id: 'triggers', label: 'Triggers', href: '/admin/triggers', icon: ZapIcon },
   { id: 'api-keys', label: 'API Keys', href: '/admin/api-keys', icon: KeyIcon },
-  { id: 'chat', label: 'Chat', href: '/admin/chat', icon: MessageIcon },
+  { id: 'event-handler', label: 'Event Handler', href: '/admin/event-handler', icon: MessageIcon },
   { id: 'github', label: 'GitHub', href: '/admin/github', icon: GitBranchIcon },
 ];
 

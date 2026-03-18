@@ -48,9 +48,11 @@ const API_KEYS_TABS = [
   { id: 'voice', label: 'Voice', href: '/admin/api-keys/voice' },
 ];
 
-const CHAT_TABS = [
-  { id: 'llm', label: 'LLM', href: '/admin/chat/llm' },
-  { id: 'telegram', label: 'Telegram', href: '/admin/chat/telegram' },
+const EVENT_HANDLER_TABS = [
+  { id: 'llms', label: 'LLMs', href: '/admin/event-handler/llms' },
+  { id: 'chat', label: 'Chat', href: '/admin/event-handler/chat' },
+  { id: 'coding-agents', label: 'Coding Agents', href: '/admin/event-handler/coding-agents' },
+  { id: 'telegram', label: 'Telegram', href: '/admin/event-handler/telegram' },
 ];
 
 const GITHUB_TABS = [
@@ -63,8 +65,13 @@ export function ApiKeysLayout({ children }) {
   return <SubTabLayout tabs={API_KEYS_TABS}>{children}</SubTabLayout>;
 }
 
+export function EventHandlerLayout({ children }) {
+  return <SubTabLayout tabs={EVENT_HANDLER_TABS}>{children}</SubTabLayout>;
+}
+
+// Backwards compat
 export function ChatSettingsLayout({ children }) {
-  return <SubTabLayout tabs={CHAT_TABS}>{children}</SubTabLayout>;
+  return <EventHandlerLayout>{children}</EventHandlerLayout>;
 }
 
 export function GitHubSettingsLayout({ children }) {

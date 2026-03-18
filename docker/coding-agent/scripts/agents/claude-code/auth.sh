@@ -1,6 +1,6 @@
 #!/bin/bash
-# Claude Code auth — use OAuth token, not API key
-# API key is for the event handler, not agents
-
-unset ANTHROPIC_API_KEY
-export CLAUDE_CODE_OAUTH_TOKEN="${CLAUDE_CODE_OAUTH_TOKEN}"
+# If OAuth token is provided, use it (unset API key so Claude Code picks OAuth)
+if [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+    unset ANTHROPIC_API_KEY
+fi
+# Otherwise ANTHROPIC_API_KEY stays in env and Claude Code uses it directly
