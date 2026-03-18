@@ -4,6 +4,11 @@
 .env.local
 *.pem
 *.key
+*.crt
+
+# Local Traefik config (certs, dynamic routes)
+traefik-config/
+docker-compose.localhost.yml
 
 .claude/*
 .playwright-mcp/
@@ -53,3 +58,5 @@ lib/code/*.js
 !lib/code/index.js
 !lib/code/ws-proxy.js
 !lib/code/terminal-sessions.js
+!lib/code/port-forwards.js
+!lib/code/port-scanner.js
