@@ -306,23 +306,25 @@ export function ChatProvidersPage() {
 
       {/* Built-in providers */}
       {settings?.builtinProviders && (
-        <div className="space-y-3 mb-6">
-          <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Built-in</h4>
-          {Object.entries(settings.builtinProviders).map(([slug, prov]) => (
-            <ProviderCard
-              key={slug}
-              slug={slug}
-              name={prov.name}
-              credentials={prov.credentials}
-              credentialStatuses={settings.credentialStatuses || []}
-              onUpdateCredential={handleUpdateCredential}
-            />
-          ))}
+        <div className="mb-6">
+          <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Built-in</h4>
+          <div className="space-y-8">
+            {Object.entries(settings.builtinProviders).map(([slug, prov]) => (
+              <ProviderCard
+                key={slug}
+                slug={slug}
+                name={prov.name}
+                credentials={prov.credentials}
+                credentialStatuses={settings.credentialStatuses || []}
+                onUpdateCredential={handleUpdateCredential}
+              />
+            ))}
+          </div>
         </div>
       )}
 
       {/* Custom providers */}
-      <div className="space-y-3">
+      <div className="space-y-8">
         <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Custom</h4>
 
         {settings?.customProviders?.map((cp) => (
@@ -363,28 +365,44 @@ function ProviderCard({ name, slug, credentials, credentialStatuses, onUpdateCre
     setSaving(null);
   };
 
+  const credentialRows = credentials.map((cred) => (
+    <SecretRow
+      key={cred.key}
+      label={cred.label}
+      description={cred.description}
+      isSet={statusMap.get(cred.key) || false}
+      saving={saving === cred.key}
+      onSave={(value) => handleSave(cred.key, value)}
+    />
+  ));
+
+  if (slug === 'anthropic') {
+    return (
+      <div>
+        <h3 className="text-sm font-medium mb-2">{name}</h3>
+        <div className="rounded-lg border bg-card p-4 space-y-4">
+          {credentials.length > 0 && (
+            <div className="divide-y divide-border">
+              {credentialRows}
+            </div>
+          )}
+          <div className="h-px bg-border" />
+          <OAuthTokenList />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <h3 className="text-sm font-medium mb-2">{name}</h3>
-      <div className="space-y-2">
-        {credentials.length > 0 && (
-          <div className="rounded-lg border bg-card p-4">
-            <div className="divide-y divide-border">
-              {credentials.map((cred) => (
-                <SecretRow
-                  key={cred.key}
-                  label={cred.label}
-                  description={cred.description}
-                  isSet={statusMap.get(cred.key) || false}
-                  saving={saving === cred.key}
-                  onSave={(value) => handleSave(cred.key, value)}
-                />
-              ))}
-            </div>
+      {credentials.length > 0 && (
+        <div className="rounded-lg border bg-card p-4">
+          <div className="divide-y divide-border">
+            {credentialRows}
           </div>
-        )}
-        {slug === 'anthropic' && <OAuthTokenList />}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -776,22 +794,24 @@ export function ChatLlmPage() {
         </div>
 
         {settings?.builtinProviders && (
-          <div className="space-y-3 mb-6">
-            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Built-in</h4>
-            {Object.entries(settings.builtinProviders).map(([slug, prov]) => (
-              <ProviderCard
-                key={slug}
-                slug={slug}
-                name={prov.name}
-                credentials={prov.credentials}
-                credentialStatuses={settings.credentialStatuses || []}
-                onUpdateCredential={handleUpdateCredential}
-              />
-            ))}
+          <div className="mb-6">
+            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Built-in</h4>
+            <div className="space-y-8">
+              {Object.entries(settings.builtinProviders).map(([slug, prov]) => (
+                <ProviderCard
+                  key={slug}
+                  slug={slug}
+                  name={prov.name}
+                  credentials={prov.credentials}
+                  credentialStatuses={settings.credentialStatuses || []}
+                  onUpdateCredential={handleUpdateCredential}
+                />
+              ))}
+            </div>
           </div>
         )}
 
-        <div className="space-y-3">
+        <div className="space-y-8">
           <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Custom</h4>
           {settings?.customProviders?.map((cp) => (
             <CustomProviderCard key={cp.key} provider={cp} onEdit={openEdit} onRemove={handleRemoveCustom} />
