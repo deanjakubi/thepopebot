@@ -2,13 +2,13 @@
 
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
-import { useState, useEffect, useRef, useMemo, useCallback, useTransition } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Messages } from './messages.js';
 import { ChatInput } from './chat-input.js';
 import { ChatHeader } from './chat-header.js';
 import { Greeting } from './greeting.js';
 import { CodeModeToggle } from './code-mode-toggle.js';
-import { getRepositories, getBranches, getWorkspaceDiffStats } from '../actions.js';
+import { getRepositories, getBranches } from '../actions.js';
 
 export function Chat({ chatId, initialMessages = [], workspace = null }) {
   const [input, setInput] = useState('');
@@ -78,14 +78,17 @@ export function Chat({ chatId, initialMessages = [], workspace = null }) {
     onError: (err) => console.error('Chat error:', err),
   });
 
-  // Fetch diff stats when AI finishes responding (status → 'ready')
-  const [, startDiffTransition] = useTransition();
+  // Fetch diff stats on mount (existing workspace) and when AI finishes responding
   const prevStatus = useRef(status);
   useEffect(() => {
-    if (prevStatus.current !== 'ready' && status === 'ready' && workspaceState?.id) {
-      startDiffTransition(() => {
-        getWorkspaceDiffStats(workspaceState.id).then(r => { if (r.success) setDiffStats(r); });
-      });
+    if (!workspaceState?.id) return;
+    const isMount = prevStatus.current === status;
+    const isFinished = prevStatus.current !== 'ready' && status === 'ready';
+    if (isMount || isFinished) {
+      fetch(`/stream/workspace-diff/${workspaceState.id}`)
+        .then(r => r.json())
+        .then(r => { if (r.success) setDiffStats(r); })
+        .catch(() => {});
     }
     prevStatus.current = status;
   }, [status, workspaceState?.id]);
@@ -213,9 +216,10 @@ export function Chat({ chatId, initialMessages = [], workspace = null }) {
       diffStats={diffStats}
       onDiffStatsRefresh={() => {
         if (workspaceState?.id) {
-          startDiffTransition(() => {
-            getWorkspaceDiffStats(workspaceState.id).then(r => { if (r.success) setDiffStats(r); });
-          });
+          fetch(`/stream/workspace-diff/${workspaceState.id}`)
+            .then(r => r.json())
+            .then(r => { if (r.success) setDiffStats(r); })
+            .catch(() => {});
         }
       }}
       onWorkspaceUpdate={(containerName) => {

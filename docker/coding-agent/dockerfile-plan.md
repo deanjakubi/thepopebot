@@ -36,7 +36,7 @@ Everything in the **agents** and **headless runtime** layers is complete:
 | **command/create-pr/** | Done — 5 scripts (setup-git, auth, setup, push, agent-run). DRAFT=1 for draft PR. |
 | **command/rebase/** | Done — 4 scripts (setup-git, auth, setup, rebase with agent conflict resolution) |
 | **Server action** | Done — `runWorkspaceCommand()` in `lib/code/actions.js` |
-| **Docker function** | Done — `runWorkspaceCommandContainer()` + `volumeExists()` in `lib/tools/docker.js` |
+| **Docker function** | Done — `runCommandContainer()` + `workspaceDirExists()` in `lib/tools/docker.js` |
 | **UI** | Done — Split button in chat branch bar (`code-mode-toggle.jsx`) |
 
 ---
@@ -89,7 +89,7 @@ These happen in the npm package after runtime scripts are built and tested.
 
 - [ ] **Volume mount scope** — change from `/home/coding-agent/workspace` to `/home/coding-agent` in `lib/tools/docker.js` so agent sessions persist for CONTINUE_SESSION
 - [ ] **Image references** — update callers to use unified image tags + pass RUNTIME env var:
-  - `lib/tools/docker.js` — runCodeWorkspaceContainer(), runHeadlessCodeContainer(), runClusterWorkerContainer()
+  - `lib/tools/docker.js` — runInteractiveContainer(), runHeadlessContainer(), runClusterWorkerContainer()
   - `lib/cluster/execute.js` — runClusterRole()
   - `lib/code/actions.js` — startInteractiveMode(), ensureCodeWorkspaceContainer()
 - [ ] **run-job.yml workflow** — update to use unified image + RUNTIME=job + AGENT from AGENT_BACKEND

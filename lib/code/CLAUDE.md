@@ -2,7 +2,7 @@
 
 ## Data Flow
 
-Chat agent's `start_coding` tool → `runCodeWorkspaceContainer()` in `lib/tools/docker.js` → Docker container runs `claude-code-workspace` image with ttyd on port 7681 → browser navigates to `/code/{id}` → `TerminalView` (xterm.js) opens WebSocket → `ws-proxy.js` authenticates and proxies to container.
+Chat agent's `start_coding` tool → `runInteractiveContainer()` in `lib/tools/docker.js` → Docker container runs `claude-code-workspace` image with ttyd on port 7681 → browser navigates to `/code/{id}` → `TerminalView` (xterm.js) opens WebSocket → `ws-proxy.js` authenticates and proxies to container.
 
 ## WebSocket Auth
 

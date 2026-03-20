@@ -152,6 +152,19 @@ function ToolCall({ part, className }) {
       >
         <WrenchIcon size={14} className="text-muted-foreground shrink-0" />
         <span className="font-medium text-foreground">{displayName}</span>
+        {isDone && (() => {
+          try {
+            const o = typeof part.output === 'string' ? JSON.parse(part.output) : part.output;
+            if (o?.codingAgent || o?.backendApi) {
+              return (
+                <span className="text-xs text-muted-foreground">
+                  {o.codingAgent}{o.backendApi ? ` · ${o.backendApi}` : ''}
+                </span>
+              );
+            }
+          } catch {}
+          return null;
+        })()}
         <span className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground">
           {isRunning && (
             <>
