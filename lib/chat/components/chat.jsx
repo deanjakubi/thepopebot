@@ -29,7 +29,7 @@ export function Chat({ chatId, initialMessages = [], workspace = null }) {
   const [codeModeType, setCodeModeType] = useState(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem(`codeModeType:${chatId}`);
-      if (stored === 'plan' || stored === 'code') return stored;
+      if (stored === 'plan' || stored === 'code' || stored === 'job') return stored;
     }
     return 'code';
   });
