@@ -79,8 +79,8 @@ jobs:
           cache-from: type=gha,scope=coding-agent-base
           cache-to: type=gha,mode=max,scope=coding-agent-base
 
-  # ─── Job 2b: Build & push per-agent + event-handler images ───
-  build-containers:
+  # ─── Job 2b: Build & push coding agent images ───
+  build-coding-agents:
     needs: [publish-staging, build-base-image]
     runs-on: ubuntu-latest
     permissions:
@@ -90,23 +90,15 @@ jobs:
       matrix:
         include:
           - image: coding-agent-claude-code
-            context: docker/coding-agent
             dockerfile: docker/coding-agent/Dockerfile.claude-code
-          - image: coding-agent-pi
-            context: docker/coding-agent
+          - image: coding-agent-pi-coding-agent
             dockerfile: docker/coding-agent/Dockerfile.pi-coding-agent
-          - image: coding-agent-gemini
-            context: docker/coding-agent
+          - image: coding-agent-gemini-cli
             dockerfile: docker/coding-agent/Dockerfile.gemini-cli
           - image: coding-agent-codex
-            context: docker/coding-agent
-            dockerfile: docker/coding-agent/Dockerfile.codex-cli
+            dockerfile: docker/coding-agent/Dockerfile.codex
           - image: coding-agent-opencode
-            context: docker/coding-agent
             dockerfile: docker/coding-agent/Dockerfile.opencode
-          - image: event-handler
-            context: .
-            dockerfile: docker/event-handler/Dockerfile
     steps:
       - uses: actions/checkout@v4
 
@@ -122,7 +114,7 @@ jobs:
       - name: Build and push ${{ matrix.image }}
         uses: docker/build-push-action@v6
         with:
-          context: ${{ matrix.context }}
+          context: docker/coding-agent
           file: ${{ matrix.dockerfile }}
           platforms: linux/amd64,linux/arm64
           push: true
@@ -132,9 +124,38 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.image }}
           cache-to: type=gha,mode=max,scope=${{ matrix.image }}
 
+  # ─── Job 2c: Build & push event-handler image (parallel with coding agents) ───
+  build-event-handler:
+    needs: [publish-staging]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-qemu-action@v3
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Build and push event-handler
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/event-handler/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: stephengpope/thepopebot:event-handler-${{ needs.publish-staging.outputs.version }}
+          cache-from: type=gha,scope=event-handler
+          cache-to: type=gha,mode=max,scope=event-handler
+
   # ─── Job 3: Promote npm staging → real channel tag ───
   promote:
-    needs: [publish-staging, build-containers]
+    needs: [publish-staging, build-coding-agents, build-event-handler]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -251,8 +272,8 @@ jobs:
 
   # ─── Job 5: Clean up if Docker builds fail ───
   cleanup-on-failure:
-    needs: [publish-staging, build-base-image, build-containers]
-    if: always() && needs.publish-staging.result == 'success' && (needs.build-base-image.result != 'success' || needs.build-containers.result != 'success')
+    needs: [publish-staging, build-base-image, build-coding-agents, build-event-handler]
+    if: always() && needs.publish-staging.result == 'success' && (needs.build-base-image.result != 'success' || needs.build-coding-agents.result != 'success' || needs.build-event-handler.result != 'success')
     runs-on: ubuntu-latest
     permissions:
       contents: read

@@ -314,7 +314,7 @@ SQLite via Drizzle ORM at `data/thepopebot.sqlite`. Auto-initialized and auto-mi
 | `CUSTOM_OPENAI_BASE_URL` | Custom OpenAI-compatible base URL | For custom provider |
 | `GOOGLE_API_KEY` | Google API key | For google provider |
 | `CUSTOM_API_KEY` | Custom provider API key | For custom provider |
-| `AGENT_BACKEND` | Agent runner: `claude-code`, `pi`, `gemini-cli`, `codex-cli`, or `opencode` | No (default: `claude-code`) |
+| `AGENT_BACKEND` | Agent runner: `claude-code`, `pi`, `gemini-cli`, `codex`, or `opencode` | No (default: `claude-code`) |
 | `DATABASE_PATH` | Override SQLite DB location | No |
 | `COMPOSE_FILE` | Override which docker-compose file to use (e.g. `docker-compose.custom.yml`) | No |
 

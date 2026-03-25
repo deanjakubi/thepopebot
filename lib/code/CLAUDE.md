@@ -25,7 +25,7 @@ All actions use `requireAuth()` with ownership checks: `getCodeWorkspaces()`, `c
 
 Code workspaces support multiple coding agent backends, selected via the `codingAgent` column on the `codeWorkspaces` table (defaults to `claude-code`).
 
-**Supported agents**: `claude-code`, `pi`, `gemini-cli`, `codex-cli`, `opencode`. Each uses a different Docker image variant (`docker/coding-agent/Dockerfile.*`) and agent-specific setup/auth scripts in `docker/coding-agent/scripts/`.
+**Supported agents**: `claude-code`, `pi`, `gemini-cli`, `codex`, `opencode`. Each uses a different Docker image variant (`docker/coding-agent/Dockerfile.*`) and agent-specific setup/auth scripts in `docker/coding-agent/scripts/`.
 
 **Agent selection**: Users configure agents via the Coding Agents admin page (`/admin/event-handler/coding-agents`). The `codingAgent` value is passed to `runInteractiveContainer()` which selects the appropriate Docker image and runtime scripts.
 

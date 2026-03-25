@@ -1,5 +1,5 @@
 #!/bin/bash
-# OpenCode setup — write system prompt
+# OpenCode setup — write system prompt + Playwright MCP
 
 WORKSPACE_DIR=$(pwd)
 
@@ -9,3 +9,17 @@ if [ -n "$SYSTEM_PROMPT" ]; then
 else
     rm -f "${WORKSPACE_DIR}/AGENTS.md"
 fi
+
+# Register Playwright MCP server for browser automation
+cat > "${WORKSPACE_DIR}/.opencode.json" << 'EOF'
+{
+  "mcpServers": {
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest", "--headless", "--browser", "chromium"],
+      "env": []
+    }
+  }
+}
+EOF

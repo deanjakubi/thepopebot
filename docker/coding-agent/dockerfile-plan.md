@@ -8,7 +8,7 @@
 | **Dockerfile.claude-code** | Done |
 | **Dockerfile.pi-coding-agent** | Done |
 | **Dockerfile.gemini-cli** | Done |
-| **Dockerfile.codex-cli** | Done |
+| **Dockerfile.codex** | Done |
 | **Dockerfile.opencode** | Done |
 | **entrypoint.sh** | Done — validates RUNTIME + AGENT, sources numbered scripts, pretty-prints stages |
 | **common/** scripts | Done — setup-git, clone, feature-branch, rebase-push |

@@ -46,4 +46,4 @@ Key files: `schema.js` (source of truth), `drizzle/` (generated migrations), `dr
 
 ## Notable Columns
 
-- `codeWorkspaces.codingAgent` — defaults to `'claude-code'`. Selects which agent backend runs in the workspace (claude-code, pi, gemini-cli, codex-cli, opencode).
+- `codeWorkspaces.codingAgent` — defaults to `'claude-code'`. Selects which agent backend runs in the workspace (claude-code, pi, gemini-cli, codex, opencode).

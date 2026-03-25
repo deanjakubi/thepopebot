@@ -53,9 +53,9 @@ const CODING_AGENTS = [
     dockerfile: 'docker/coding-agent/Dockerfile.gemini-cli',
   },
   {
-    name: 'coding-agent-codex-cli',
+    name: 'coding-agent-codex',
     context: 'docker/coding-agent',
-    dockerfile: 'docker/coding-agent/Dockerfile.codex-cli',
+    dockerfile: 'docker/coding-agent/Dockerfile.codex',
   },
   {
     name: 'coding-agent-opencode',

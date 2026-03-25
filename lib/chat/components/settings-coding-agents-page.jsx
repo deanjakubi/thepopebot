@@ -67,7 +67,7 @@ function DefaultAgentSection({ settings, onReload }) {
     available.push({ value: 'gemini-cli', label: 'Gemini CLI' });
   }
   if (settings.codexCli?.enabled && isCodexCliReady(settings)) {
-    available.push({ value: 'codex-cli', label: 'Codex CLI' });
+    available.push({ value: 'codex', label: 'Codex CLI' });
   }
   if (settings.openCode?.enabled && isOpenCodeReady(settings)) {
     available.push({ value: 'opencode', label: 'OpenCode' });
@@ -501,17 +501,17 @@ function CodexCliCard({ settings, onReload }) {
   const openaiModels = getAgentModels(settings, 'openai');
 
   const handleToggle = async () => {
-    await updateCodingAgentConfig('codex-cli', { enabled: !config.enabled });
+    await updateCodingAgentConfig('codex', { enabled: !config.enabled });
     await onReload();
   };
 
   const handleAuthChange = async (auth) => {
-    await updateCodingAgentConfig('codex-cli', { auth });
+    await updateCodingAgentConfig('codex', { auth });
     await onReload();
   };
 
   const handleModelChange = async (e) => {
-    await updateCodingAgentConfig('codex-cli', { model: e.target.value });
+    await updateCodingAgentConfig('codex', { model: e.target.value });
     await onReload();
   };
 
