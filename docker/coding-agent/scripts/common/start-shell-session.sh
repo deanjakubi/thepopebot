@@ -1,4 +1,12 @@
 #!/bin/bash
-# Start a bash shell session via ttyd on $PORT
+# Start a bash shell session via ttyd on $PORT — uses tmux to survive disconnects
 
-exec ttyd --writable -p "${PORT}" bash -c 'cd /home/coding-agent/workspace && exec bash'
+SESSION_NAME="shell-${PORT}"
+
+exec ttyd --writable -p "${PORT}" bash -c "
+  if tmux has-session -t ${SESSION_NAME} 2>/dev/null; then
+    exec tmux attach -t ${SESSION_NAME}
+  fi
+  tmux -u new-session -d -s ${SESSION_NAME} -c /home/coding-agent/workspace
+  exec tmux attach -t ${SESSION_NAME}
+"

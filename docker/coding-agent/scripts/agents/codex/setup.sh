@@ -13,10 +13,8 @@ fi
 # Pre-configure trust, model, and MCP to skip interactive prompts
 mkdir -p ~/.codex
 
-CODEX_MODEL="${LLM_MODEL:-gpt-5.4}"
-
 cat > ~/.codex/config.toml << EOF
-model = "${CODEX_MODEL}"
+$([ -n "$LLM_MODEL" ] && echo "model = \"${LLM_MODEL}\"")
 
 [projects."${WORKSPACE_DIR}"]
 trust_level = "trusted"

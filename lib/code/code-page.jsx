@@ -357,7 +357,7 @@ export default function CodePage({ session, codeWorkspaceId }) {
               )}
 
               {/* Divider between real tabs and + buttons */}
-              <div className="self-stretch my-1.5 mx-1 w-px bg-border/60" />
+              <div className="self-stretch my-1.5 mx-4 w-px bg-border" />
 
               {/* + buttons */}
               <button

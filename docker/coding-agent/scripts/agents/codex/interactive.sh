@@ -3,6 +3,9 @@
 # CONTINUE_SESSION: 1 = continue most recent session (resume --last)
 
 CODEX_ARGS="codex"
+if [ -n "$LLM_MODEL" ]; then
+    CODEX_ARGS="$CODEX_ARGS --model $LLM_MODEL"
+fi
 if [ "$CONTINUE_SESSION" = "1" ]; then
     CODEX_ARGS="$CODEX_ARGS resume --last"
 fi

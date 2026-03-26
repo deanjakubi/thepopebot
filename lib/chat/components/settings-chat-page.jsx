@@ -683,7 +683,7 @@ function CustomProviderDialog({ open, initial, onSave, onCancel }) {
       </div>
       <div className="flex justify-end gap-2 mt-5">
         <button onClick={onCancel} className="rounded-md px-3 py-1.5 text-sm font-medium border border-border text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
-        <button onClick={handleSubmit} disabled={!name || !baseUrl || saving}
+        <button onClick={handleSubmit} disabled={!name || !baseUrl || !model || saving}
           className="rounded-md px-3 py-1.5 text-sm font-medium bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50 transition-colors">
           {saving ? 'Saving...' : initial ? 'Save' : 'Add'}
         </button>

@@ -3,6 +3,9 @@
 # CONTINUE_SESSION: 1 = continue most recent session (-c)
 
 PI_ARGS="pi"
+if [ -n "$LLM_MODEL" ]; then
+    PI_ARGS="$PI_ARGS --model $LLM_MODEL"
+fi
 if [ "$CONTINUE_SESSION" = "1" ]; then
     PI_ARGS="$PI_ARGS -c"
 fi

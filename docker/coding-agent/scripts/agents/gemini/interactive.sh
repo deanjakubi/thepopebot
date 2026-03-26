@@ -3,6 +3,9 @@
 # CONTINUE_SESSION: 1 = continue most recent session (--resume)
 
 GEMINI_ARGS="gemini --approval-mode yolo"
+if [ -n "$LLM_MODEL" ]; then
+    GEMINI_ARGS="$GEMINI_ARGS --model $LLM_MODEL"
+fi
 if [ "$CONTINUE_SESSION" = "1" ]; then
     GEMINI_ARGS="$GEMINI_ARGS --resume"
 fi

@@ -3,6 +3,9 @@
 # CONTINUE_SESSION: 1 = continue most recent session (tui --continue)
 
 OPENCODE_ARGS="opencode"
+if [ -n "$LLM_MODEL" ]; then
+    OPENCODE_ARGS="$OPENCODE_ARGS --model $LLM_MODEL"
+fi
 if [ "$CONTINUE_SESSION" = "1" ]; then
     OPENCODE_ARGS="$OPENCODE_ARGS tui --continue"
 fi

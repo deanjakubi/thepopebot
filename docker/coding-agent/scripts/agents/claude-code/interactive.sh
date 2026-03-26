@@ -3,6 +3,9 @@
 # CONTINUE_SESSION: 1 = resume session for this port if session file exists
 
 CLAUDE_ARGS="claude --dangerously-skip-permissions"
+if [ -n "$LLM_MODEL" ]; then
+    CLAUDE_ARGS="$CLAUDE_ARGS --model $LLM_MODEL"
+fi
 SESSION_FILE="/home/coding-agent/.claude-ttyd-sessions/${PORT:-7681}"
 if [ "$CONTINUE_SESSION" = "1" ] && [ -f "$SESSION_FILE" ]; then
     SESSION_ID=$(cat "$SESSION_FILE")
