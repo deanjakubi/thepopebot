@@ -147,6 +147,7 @@ function ClaudeCodeCard({ settings, onReload }) {
   const ready = isClaudeCodeReady(settings);
   const backend = config.backend || 'anthropic';
   const [saving, setSaving] = useState(false);
+  const [modelText, setModelText] = useState(config.model || '');
 
   // Build backend options: Anthropic + providers with anthropicEndpoint AND a configured key
   const backendOptions = [{ slug: 'anthropic', name: 'Anthropic' }];
@@ -168,8 +169,12 @@ function ClaudeCodeCard({ settings, onReload }) {
     }
   }
 
-  // Models for selected backend
-  const backendModels = getAgentModels(settings, backend);
+  // Models for selected backend — builtin models or custom provider models
+  const builtinBackendModels = getAgentModels(settings, backend);
+  const customBackend = settings?.customProviders?.find((cp) => cp.key === backend);
+  const backendModels = builtinBackendModels.length > 0
+    ? builtinBackendModels
+    : (customBackend?.models || []).map((m) => ({ id: m, name: m }));
 
   const handleToggle = async () => {
     await updateCodingAgentConfig('claude-code', { enabled: !config.enabled });
@@ -190,6 +195,7 @@ function ClaudeCodeCard({ settings, onReload }) {
         newModel = cp?.models?.[0] || '';
       }
     }
+    setModelText(newModel);
     setSaving(true);
     await updateCodingAgentConfig('claude-code', { backend: newBackend, model: newModel });
     setSaving(false);
@@ -203,6 +209,11 @@ function ClaudeCodeCard({ settings, onReload }) {
 
   const handleModelChange = async (e) => {
     await updateCodingAgentConfig('claude-code', { model: e.target.value });
+    await onReload();
+  };
+
+  const handleModelTextSave = async () => {
+    await updateCodingAgentConfig('claude-code', { model: modelText });
     await onReload();
   };
 
@@ -307,20 +318,36 @@ function ClaudeCodeCard({ settings, onReload }) {
           <div className="border-t border-border pt-3">
             <div className="flex items-center justify-between">
               <label className="text-sm font-medium">Model</label>
-              <select
-                value={config.model || ''}
-                onChange={handleModelChange}
-                className="w-48 rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
-              >
-                {backend === 'anthropic' && <option value="">Default</option>}
-                {backendModels.map((m) => (
-                  <option key={m.id} value={m.id}>{m.name}</option>
-                ))}
-                {backendModels.length === 0 && settings?.customProviders?.filter((cp) => cp.key === backend).flatMap((cp) =>
-                  (cp.models || []).map((m) => <option key={m} value={m}>{m}</option>)
-                )}
-              </select>
+              {backendModels.length > 0 || backend === 'anthropic' ? (
+                <select
+                  value={config.model || ''}
+                  onChange={handleModelChange}
+                  className="w-48 rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
+                >
+                  {backend === 'anthropic' && <option value="">Default</option>}
+                  {backendModels.map((m) => (
+                    <option key={m.id} value={m.id}>{m.name}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  value={modelText}
+                  onChange={(e) => setModelText(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleModelTextSave()}
+                  placeholder="Model name"
+                  className="w-48 rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
+                />
+              )}
             </div>
+            {backendModels.length === 0 && backend !== 'anthropic' && (
+              <div className="flex justify-end mt-2">
+                <button onClick={handleModelTextSave} disabled={modelText === (config.model || '')}
+                  className="rounded-md px-2.5 py-1.5 text-xs font-medium border border-border text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50 transition-colors">
+                  Save
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -334,6 +361,7 @@ function ClaudeCodeCard({ settings, onReload }) {
 
 function PiCard({ settings, onReload }) {
   const config = settings.pi;
+  const [modelText, setModelText] = useState(config.model || '');
 
   const handleToggle = async () => {
     await updateCodingAgentConfig('pi-coding-agent', { enabled: !config.enabled });
@@ -345,12 +373,18 @@ function PiCard({ settings, onReload }) {
     // Auto-select first model for custom providers
     const cp = settings?.customProviders?.find((p) => p.key === newProvider);
     const newModel = cp?.models?.[0] || '';
+    setModelText(newModel);
     await updateCodingAgentConfig('pi-coding-agent', { provider: newProvider, model: newModel });
     await onReload();
   };
 
   const handleModelChange = async (e) => {
     await updateCodingAgentConfig('pi-coding-agent', { model: e.target.value });
+    await onReload();
+  };
+
+  const handleModelTextSave = async () => {
+    await updateCodingAgentConfig('pi-coding-agent', { model: modelText });
     await onReload();
   };
 
@@ -411,16 +445,36 @@ function PiCard({ settings, onReload }) {
               {config.provider && (
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium">Model</label>
-                  <select
-                    value={config.model || ''}
-                    onChange={handleModelChange}
-                    className="w-48 rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
-                  >
-                    {!customProvider && <option value="">Default</option>}
-                    {providerModels.map((m) => (
-                      <option key={m.id} value={m.id}>{m.name}</option>
-                    ))}
-                  </select>
+                  {providerModels.length > 0 ? (
+                    <select
+                      value={config.model || ''}
+                      onChange={handleModelChange}
+                      className="w-48 rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
+                    >
+                      {!customProvider && <option value="">Default</option>}
+                      {providerModels.map((m) => (
+                        <option key={m.id} value={m.id}>{m.name}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={modelText}
+                      onChange={(e) => setModelText(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleModelTextSave()}
+                      placeholder="Model name"
+                      className="w-48 rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
+                    />
+                  )}
+                </div>
+              )}
+
+              {config.provider && providerModels.length === 0 && (
+                <div className="flex justify-end">
+                  <button onClick={handleModelTextSave} disabled={modelText === (config.model || '')}
+                    className="rounded-md px-2.5 py-1.5 text-xs font-medium border border-border text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50 transition-colors">
+                    Save
+                  </button>
                 </div>
               )}
 
@@ -608,6 +662,7 @@ function CodexCliCard({ settings, onReload }) {
 
 function OpenCodeCard({ settings, onReload }) {
   const config = settings.openCode;
+  const [modelText, setModelText] = useState(config.model || '');
 
   const handleToggle = async () => {
     await updateCodingAgentConfig('opencode', { enabled: !config.enabled });
@@ -618,12 +673,18 @@ function OpenCodeCard({ settings, onReload }) {
     const newProvider = e.target.value;
     const cp = settings?.customProviders?.find((p) => p.key === newProvider);
     const newModel = cp?.models?.[0] || '';
+    setModelText(newModel);
     await updateCodingAgentConfig('opencode', { provider: newProvider, model: newModel });
     await onReload();
   };
 
   const handleModelChange = async (e) => {
     await updateCodingAgentConfig('opencode', { model: e.target.value });
+    await onReload();
+  };
+
+  const handleModelTextSave = async () => {
+    await updateCodingAgentConfig('opencode', { model: modelText });
     await onReload();
   };
 
@@ -684,16 +745,36 @@ function OpenCodeCard({ settings, onReload }) {
               {config.provider && (
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium">Model</label>
-                  <select
-                    value={config.model || ''}
-                    onChange={handleModelChange}
-                    className="w-48 rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
-                  >
-                    {!customProvider && <option value="">Default</option>}
-                    {providerModels.map((m) => (
-                      <option key={m.id} value={m.id}>{m.name}</option>
-                    ))}
-                  </select>
+                  {providerModels.length > 0 ? (
+                    <select
+                      value={config.model || ''}
+                      onChange={handleModelChange}
+                      className="w-48 rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
+                    >
+                      {!customProvider && <option value="">Default</option>}
+                      {providerModels.map((m) => (
+                        <option key={m.id} value={m.id}>{m.name}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={modelText}
+                      onChange={(e) => setModelText(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleModelTextSave()}
+                      placeholder="Model name"
+                      className="w-48 rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
+                    />
+                  )}
+                </div>
+              )}
+
+              {config.provider && providerModels.length === 0 && (
+                <div className="flex justify-end">
+                  <button onClick={handleModelTextSave} disabled={modelText === (config.model || '')}
+                    className="rounded-md px-2.5 py-1.5 text-xs font-medium border border-border text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50 transition-colors">
+                    Save
+                  </button>
                 </div>
               )}
 

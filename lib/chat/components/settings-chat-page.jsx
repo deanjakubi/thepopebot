@@ -66,6 +66,7 @@ export function ChatConfigPage() {
 function ActiveConfig({ settings, onSave }) {
   const [provider, setProvider] = useState('');
   const [model, setModel] = useState('');
+  const [modelText, setModelText] = useState('');
   const [maxTokens, setMaxTokens] = useState('4096');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -76,6 +77,7 @@ function ActiveConfig({ settings, onSave }) {
     if (settings?.active) {
       setProvider(settings.active.provider || 'anthropic');
       setModel(settings.active.model || '');
+      setModelText(settings.active.model || '');
       setMaxTokens(settings.active.maxTokens || '4096');
       setTimeout(() => { initialized.current = true; }, 100);
     }
@@ -122,12 +124,20 @@ function ActiveConfig({ settings, onSave }) {
     const def = models.find((m) => m.default);
     const newModel = def?.id || models[0]?.id || '';
     setModel(newModel);
-    scheduleAutoSave(slug, newModel, maxTokens);
+    setModelText(newModel);
+    if (models.length > 0) {
+      scheduleAutoSave(slug, newModel, maxTokens);
+    }
   };
 
   const handleModelChange = (m) => {
     setModel(m);
     scheduleAutoSave(provider, m, maxTokens);
+  };
+
+  const handleModelTextSave = () => {
+    setModel(modelText);
+    doSave(provider, modelText, maxTokens);
   };
 
   const handleMaxTokensChange = (mt) => {
@@ -156,15 +166,34 @@ function ActiveConfig({ settings, onSave }) {
 
         <div className="flex items-center justify-between py-3">
           <label className="text-sm font-medium shrink-0">Model</label>
-          <select
-            value={model}
-            onChange={(e) => handleModelChange(e.target.value)}
-            className="w-48 rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
-          >
-            {(selectedProvider?.models || []).filter((m) => m.chat !== false).map((m) => (
-              <option key={m.id} value={m.id}>{m.name}</option>
-            ))}
-          </select>
+          {(selectedProvider?.models || []).length > 0 ? (
+            <select
+              value={model}
+              onChange={(e) => handleModelChange(e.target.value)}
+              className="w-48 rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
+            >
+              {(selectedProvider?.models || []).filter((m) => m.chat !== false).map((m) => (
+                <option key={m.id} value={m.id}>{m.name}</option>
+              ))}
+            </select>
+          ) : (
+            <div>
+              <input
+                type="text"
+                value={modelText}
+                onChange={(e) => setModelText(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleModelTextSave()}
+                placeholder="Model name"
+                className="w-48 rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
+              />
+              <div className="flex justify-end mt-2">
+                <button onClick={handleModelTextSave} disabled={modelText === model || saving}
+                  className="rounded-md px-2.5 py-1.5 text-xs font-medium border border-border text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50 transition-colors">
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center justify-between py-3 last:pb-0">
