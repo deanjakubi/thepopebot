@@ -109,7 +109,7 @@ function ActiveConfig({ settings, onSave }) {
   }
   if (settings?.customProviders) {
     for (const cp of settings.customProviders) {
-      availableProviders.push({ slug: cp.key, name: cp.name, models: [{ id: cp.model, name: cp.model }] });
+      availableProviders.push({ slug: cp.key, name: cp.name, models: cp.models.map((m) => ({ id: m, name: m })) });
     }
   }
 
@@ -598,9 +598,9 @@ function CustomProviderCard({ provider, onEdit, onRemove }) {
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between py-3">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Model</span>
+              <span className="text-sm font-medium">Models</span>
             </div>
-            <code className="text-xs font-mono text-muted-foreground">{provider.model}</code>
+            <code className="text-xs font-mono text-muted-foreground">{provider.models.join(', ')}</code>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between py-3">
             <div className="flex items-center gap-2">
@@ -618,7 +618,7 @@ function CustomProviderDialog({ open, initial, onSave, onCancel }) {
   const [name, setName] = useState(initial?.name || '');
   const [baseUrl, setBaseUrl] = useState(initial?.baseUrl || '');
   const [apiKey, setApiKey] = useState('');
-  const [model, setModel] = useState(initial?.model || '');
+  const [models, setModels] = useState(initial?.models?.length ? initial.models : ['']);
   const [saving, setSaving] = useState(false);
   const nameRef = useRef(null);
 
@@ -627,7 +627,7 @@ function CustomProviderDialog({ open, initial, onSave, onCancel }) {
       setName(initial?.name || '');
       setBaseUrl(initial?.baseUrl || '');
       setApiKey('');
-      setModel(initial?.model || '');
+      setModels(initial?.models?.length ? [...initial.models] : ['']);
       setSaving(false);
       setTimeout(() => nameRef.current?.focus(), 50);
     }
@@ -635,12 +635,29 @@ function CustomProviderDialog({ open, initial, onSave, onCancel }) {
 
   const handleSubmit = async () => {
     setSaving(true);
-    const config = { name, baseUrl, model };
+    const filteredModels = models.filter((m) => m.trim());
+    const config = { name, baseUrl, models: filteredModels };
     if (apiKey) config.apiKey = apiKey;
     else if (initial?.hasApiKey) config.apiKey = '__keep__';
     await onSave(config);
     setSaving(false);
   };
+
+  const updateModel = (index, value) => {
+    const next = [...models];
+    next[index] = value;
+    setModels(next);
+  };
+
+  const removeModel = (index) => {
+    setModels(models.filter((_, i) => i !== index));
+  };
+
+  const addModel = () => {
+    setModels([...models, '']);
+  };
+
+  const hasValidModels = models.some((m) => m.trim());
 
   return (
     <Dialog open={open} onClose={onCancel} title={initial ? 'Edit Provider' : 'Add OpenAI Compatible API'}>
@@ -662,21 +679,37 @@ function CustomProviderDialog({ open, initial, onSave, onCancel }) {
             className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-foreground" />
         </div>
         <div>
-          <label className="text-xs font-medium mb-1 block">Model</label>
-          <input type="text" value={model} onChange={(e) => setModel(e.target.value)} placeholder="qwen2.5-coder:3b"
-            className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-foreground" />
+          <label className="text-xs font-medium mb-1 block">Models</label>
+          <div className="space-y-2">
+            {models.map((m, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <input type="text" value={m} onChange={(e) => updateModel(i, e.target.value)} placeholder="qwen2.5-coder:3b"
+                  className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-foreground" />
+                {models.length > 1 && (
+                  <button type="button" onClick={() => removeModel(i)}
+                    className="shrink-0 rounded-md px-2 py-1.5 text-xs font-medium border border-border text-muted-foreground hover:text-destructive hover:border-destructive/50 transition-colors">
+                    &times;
+                  </button>
+                )}
+              </div>
+            ))}
+            <button type="button" onClick={addModel}
+              className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
+              + Add model
+            </button>
+          </div>
         </div>
         <div className="rounded-md border border-border bg-muted/50 px-3 py-2.5 text-xs text-muted-foreground space-y-1">
           <p className="font-medium text-foreground">Ollama</p>
           <p>Name: <span className="font-mono">Ollama (qwen2.5-coder:3b)</span></p>
           <p>URL: <span className="font-mono">http://host.docker.internal:11434/v1</span></p>
           <p>API Key: any value (e.g. <span className="font-mono">ollama</span>)</p>
-          <p>Model: exact name from <span className="font-mono">ollama list</span></p>
+          <p>Models: exact names from <span className="font-mono">ollama list</span></p>
         </div>
       </div>
       <div className="flex justify-end gap-2 mt-5">
         <button onClick={onCancel} className="rounded-md px-3 py-1.5 text-sm font-medium border border-border text-muted-foreground hover:text-foreground transition-colors">Cancel</button>
-        <button onClick={handleSubmit} disabled={!name || !baseUrl || !model || saving}
+        <button onClick={handleSubmit} disabled={!name || !baseUrl || !hasValidModels || saving}
           className="rounded-md px-3 py-1.5 text-sm font-medium bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50 transition-colors">
           {saving ? 'Saving...' : initial ? 'Save' : 'Add'}
         </button>

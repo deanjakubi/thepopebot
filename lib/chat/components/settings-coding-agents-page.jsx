@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { CheckIcon } from './icons.js';
 import {
   getCodingAgentSettings,
@@ -185,9 +185,9 @@ function ClaudeCodeCard({ settings, onReload }) {
       if (models.length > 0) {
         newModel = models[0].id;
       } else {
-        // Custom provider — use its configured model
+        // Custom provider — use its first configured model
         const cp = settings?.customProviders?.find((p) => p.key === newBackend);
-        newModel = cp?.model || '';
+        newModel = cp?.models?.[0] || '';
       }
     }
     setSaving(true);
@@ -316,9 +316,9 @@ function ClaudeCodeCard({ settings, onReload }) {
                 {backendModels.map((m) => (
                   <option key={m.id} value={m.id}>{m.name}</option>
                 ))}
-                {backendModels.length === 0 && settings?.customProviders?.filter((cp) => cp.key === backend).map((cp) => (
-                  cp.model ? <option key={cp.model} value={cp.model}>{cp.model}</option> : null
-                ))}
+                {backendModels.length === 0 && settings?.customProviders?.filter((cp) => cp.key === backend).flatMap((cp) =>
+                  (cp.models || []).map((m) => <option key={m} value={m}>{m}</option>)
+                )}
               </select>
             </div>
           </div>
@@ -334,7 +334,6 @@ function ClaudeCodeCard({ settings, onReload }) {
 
 function PiCard({ settings, onReload }) {
   const config = settings.pi;
-  const [customModel, setCustomModel] = useState(config.model || '');
 
   const handleToggle = async () => {
     await updateCodingAgentConfig('pi-coding-agent', { enabled: !config.enabled });
@@ -342,9 +341,11 @@ function PiCard({ settings, onReload }) {
   };
 
   const handleProviderChange = async (e) => {
-    // Reset model when provider changes
-    await updateCodingAgentConfig('pi-coding-agent', { provider: e.target.value, model: '' });
-    setCustomModel('');
+    const newProvider = e.target.value;
+    // Auto-select first model for custom providers
+    const cp = settings?.customProviders?.find((p) => p.key === newProvider);
+    const newModel = cp?.models?.[0] || '';
+    await updateCodingAgentConfig('pi-coding-agent', { provider: newProvider, model: newModel });
     await onReload();
   };
 
@@ -352,11 +353,6 @@ function PiCard({ settings, onReload }) {
     await updateCodingAgentConfig('pi-coding-agent', { model: e.target.value });
     await onReload();
   };
-
-  const handleCustomModelSave = useCallback(async () => {
-    await updateCodingAgentConfig('pi-coding-agent', { model: customModel });
-    await onReload();
-  }, [customModel, onReload]);
 
   // Build available providers list (builtin with keys set + custom providers)
   const availableProviders = [];
@@ -371,16 +367,17 @@ function PiCard({ settings, onReload }) {
   }
   if (settings?.customProviders) {
     for (const cp of settings.customProviders) {
-      availableProviders.push({ slug: cp.key, name: cp.name, isCustom: true });
+      availableProviders.push({ slug: cp.key, name: cp.name });
     }
   }
 
   const ready = isPiReady(settings);
   const selectedProviderReady = availableProviders.some(p => p.slug === config.provider);
-  const isCustomProvider = availableProviders.find(p => p.slug === config.provider)?.isCustom;
 
-  // Get models for selected provider (codingAgent-capable only)
-  const providerModels = config.provider ? getAgentModels(settings, config.provider) : [];
+  // Get models for selected provider — builtin models or custom provider models
+  const builtinModels = config.provider ? getAgentModels(settings, config.provider) : [];
+  const customProvider = settings?.customProviders?.find((p) => p.key === config.provider);
+  const providerModels = builtinModels.length > 0 ? builtinModels : (customProvider?.models || []).map((m) => ({ id: m, name: m }));
 
   return (
     <div className="rounded-lg border bg-card p-4">
@@ -414,28 +411,16 @@ function PiCard({ settings, onReload }) {
               {config.provider && (
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium">Model</label>
-                  {isCustomProvider ? (
-                    <input
-                      type="text"
-                      value={customModel}
-                      onChange={(e) => setCustomModel(e.target.value)}
-                      onBlur={handleCustomModelSave}
-                      onKeyDown={(e) => e.key === 'Enter' && handleCustomModelSave()}
-                      placeholder="Leave empty for provider default"
-                      className="w-48 rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
-                    />
-                  ) : (
-                    <select
-                      value={config.model || ''}
-                      onChange={handleModelChange}
-                      className="w-48 rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
-                    >
-                      <option value="">Default</option>
-                      {providerModels.map((m) => (
-                        <option key={m.id} value={m.id}>{m.name}</option>
-                      ))}
-                    </select>
-                  )}
+                  <select
+                    value={config.model || ''}
+                    onChange={handleModelChange}
+                    className="w-48 rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
+                  >
+                    {!customProvider && <option value="">Default</option>}
+                    {providerModels.map((m) => (
+                      <option key={m.id} value={m.id}>{m.name}</option>
+                    ))}
+                  </select>
                 </div>
               )}
 
@@ -623,7 +608,6 @@ function CodexCliCard({ settings, onReload }) {
 
 function OpenCodeCard({ settings, onReload }) {
   const config = settings.openCode;
-  const [customModel, setCustomModel] = useState(config.model || '');
 
   const handleToggle = async () => {
     await updateCodingAgentConfig('opencode', { enabled: !config.enabled });
@@ -631,8 +615,10 @@ function OpenCodeCard({ settings, onReload }) {
   };
 
   const handleProviderChange = async (e) => {
-    await updateCodingAgentConfig('opencode', { provider: e.target.value, model: '' });
-    setCustomModel('');
+    const newProvider = e.target.value;
+    const cp = settings?.customProviders?.find((p) => p.key === newProvider);
+    const newModel = cp?.models?.[0] || '';
+    await updateCodingAgentConfig('opencode', { provider: newProvider, model: newModel });
     await onReload();
   };
 
@@ -640,11 +626,6 @@ function OpenCodeCard({ settings, onReload }) {
     await updateCodingAgentConfig('opencode', { model: e.target.value });
     await onReload();
   };
-
-  const handleCustomModelSave = useCallback(async () => {
-    await updateCodingAgentConfig('opencode', { model: customModel });
-    await onReload();
-  }, [customModel, onReload]);
 
   // Build available providers list (same pattern as PiCard)
   const availableProviders = [];
@@ -659,14 +640,17 @@ function OpenCodeCard({ settings, onReload }) {
   }
   if (settings?.customProviders) {
     for (const cp of settings.customProviders) {
-      availableProviders.push({ slug: cp.key, name: cp.name, isCustom: true });
+      availableProviders.push({ slug: cp.key, name: cp.name });
     }
   }
 
   const ready = isOpenCodeReady(settings);
   const selectedProviderReady = availableProviders.some(p => p.slug === config.provider);
-  const isCustomProvider = availableProviders.find(p => p.slug === config.provider)?.isCustom;
-  const providerModels = config.provider ? getAgentModels(settings, config.provider) : [];
+
+  // Get models for selected provider — builtin models or custom provider models
+  const builtinModels = config.provider ? getAgentModels(settings, config.provider) : [];
+  const customProvider = settings?.customProviders?.find((p) => p.key === config.provider);
+  const providerModels = builtinModels.length > 0 ? builtinModels : (customProvider?.models || []).map((m) => ({ id: m, name: m }));
 
   return (
     <div className="rounded-lg border bg-card p-4">
@@ -700,28 +684,16 @@ function OpenCodeCard({ settings, onReload }) {
               {config.provider && (
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium">Model</label>
-                  {isCustomProvider ? (
-                    <input
-                      type="text"
-                      value={customModel}
-                      onChange={(e) => setCustomModel(e.target.value)}
-                      onBlur={handleCustomModelSave}
-                      onKeyDown={(e) => e.key === 'Enter' && handleCustomModelSave()}
-                      placeholder="Leave empty for provider default"
-                      className="w-48 rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
-                    />
-                  ) : (
-                    <select
-                      value={config.model || ''}
-                      onChange={handleModelChange}
-                      className="w-48 rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
-                    >
-                      <option value="">Default</option>
-                      {providerModels.map((m) => (
-                        <option key={m.id} value={m.id}>{m.name}</option>
-                      ))}
-                    </select>
-                  )}
+                  <select
+                    value={config.model || ''}
+                    onChange={handleModelChange}
+                    className="w-48 rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-foreground"
+                  >
+                    {!customProvider && <option value="">Default</option>}
+                    {providerModels.map((m) => (
+                      <option key={m.id} value={m.id}>{m.name}</option>
+                    ))}
+                  </select>
                 </div>
               )}
 
