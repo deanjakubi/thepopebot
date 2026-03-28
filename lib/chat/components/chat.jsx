@@ -257,7 +257,7 @@ export function Chat({ chatId, initialMessages = [], workspace = null, chatMode 
           <div className="w-full max-w-4xl">
             <Greeting codeMode={codeMode} />
             {error && (
-              <div className="mt-4 rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-2 text-sm text-destructive">
+              <div className="mt-4 mb-4 rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-2 text-sm text-destructive">
                 {error.message || 'Something went wrong. Please try again.'}
               </div>
             )}
