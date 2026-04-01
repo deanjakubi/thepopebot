@@ -71,18 +71,11 @@ RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && rm -rf /var/lib/apt/lists/*
 
 # ──────────────────────────────────────────────
-# Playwright Chromium (pre-installed for MCP)
-# ──────────────────────────────────────────────
-ENV PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers
-RUN npx -y playwright install --with-deps chromium
-
-# ──────────────────────────────────────────────
 # Non-root user
 # ──────────────────────────────────────────────
 RUN useradd -m -s /bin/bash -u 1001 coding-agent \
     && mkdir -p /home/coding-agent/workspace \
-    && chown coding-agent:coding-agent /home/coding-agent/workspace \
-    && chown -R coding-agent:coding-agent /opt/pw-browsers
+    && chown coding-agent:coding-agent /home/coding-agent/workspace
 
 # ──────────────────────────────────────────────
 # Copy scripts, commands, and configs

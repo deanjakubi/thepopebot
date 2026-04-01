@@ -6,6 +6,11 @@ WORKSPACE_DIR=$(pwd)
 # Activate playwright-cli for Pi (other agents have Playwright MCP built-in)
 ln -sf ../playwright-cli skills/active/playwright-cli 2>/dev/null || true
 
+# Activate agent-job-secrets skill when token is available (agent chat mode only)
+if [ -n "$AGENT_JOB_TOKEN" ]; then
+  ln -sf ../agent-job-secrets skills/active/agent-job-secrets 2>/dev/null || true
+fi
+
 # Always write system prompt (clears previous if SYSTEM_PROMPT is empty)
 mkdir -p "${WORKSPACE_DIR}/.pi"
 if [ -n "$SYSTEM_PROMPT" ]; then
