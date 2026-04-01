@@ -9,6 +9,7 @@ import {
   updateAgentJobSecret,
   deleteAgentJobSecretAction,
   initiateOAuthFlow,
+  getOAuthSecretCredentials,
 } from '../actions.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -225,6 +226,19 @@ function AddSecretDialog({ open, onAdd, onCancel, onOAuthSuccess, editingSecret 
       setCopied(false);
       setRedirectUri(`${window.location.origin}/api/oauth/callback`);
       if (!editingSecret) setTimeout(() => nameRef.current?.focus(), 50);
+
+      // Pre-fill OAuth credentials from stored secret
+      if (editingSecret?.key) {
+        getOAuthSecretCredentials(editingSecret.key).then((creds) => {
+          if (creds && !creds.error) {
+            setClientId(creds.clientId);
+            setClientSecret(creds.clientSecret);
+            // Auto-select provider by matching tokenUrl
+            const match = PROVIDER_OPTIONS.find((o) => o.tokenUrl === creds.tokenUrl);
+            if (match) setSelectedOption(match.id);
+          }
+        });
+      }
     }
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
