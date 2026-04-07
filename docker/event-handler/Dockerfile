@@ -40,11 +40,21 @@ RUN apt-get update && \
 
 RUN npm install -g pm2
 
+# Run as coding-agent (UID 1001) so files created by in-process SDK
+# are natively owned by the same user as interactive coding agent containers.
+# Docker socket access via the docker group.
+RUN useradd -m -s /bin/bash -u 1001 coding-agent && \
+    groupadd -g 999 docker && \
+    usermod -aG docker coding-agent
+
 WORKDIR /app
 COPY --from=builder /app/node_modules ./node_modules
 RUN echo '{"private":true}' > package.json
 COPY --from=nextjs /app/.next ./.next
 COPY web/server.js web/next.config.mjs web/instrumentation.js web/middleware.js web/postcss.config.mjs ./
+RUN chown -R coding-agent:coding-agent /app
+
+USER coding-agent
 
 EXPOSE 80
 CMD ["pm2-runtime", "--kill-timeout", "120000", "server.js"]
