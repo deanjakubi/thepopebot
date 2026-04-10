@@ -50,8 +50,8 @@ const API_KEYS_TABS = [
 
 const EVENT_HANDLER_TABS = [
   { id: 'llms', label: 'LLMs', href: '/admin/event-handler/llms' },
-  { id: 'chat', label: 'Chat', href: '/admin/event-handler/chat' },
   { id: 'coding-agents', label: 'Coding Agents', href: '/admin/event-handler/coding-agents' },
+  { id: 'chat', label: 'Chat', href: '/admin/event-handler/chat' },
   { id: 'agent-secrets', label: 'Agent Secrets', href: '/admin/event-handler/agent-secrets' },
   { id: 'webhooks', label: 'Webhooks', href: '/admin/event-handler/webhooks' },
   { id: 'telegram', label: 'Telegram', href: '/admin/event-handler/telegram' },

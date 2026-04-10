@@ -52,13 +52,25 @@ export function ChatConfigPage() {
     return <p className="text-sm text-destructive">{settings.error}</p>;
   }
 
+  const sdkAgentActive = settings?.sdkAgentActive;
+  const defaultAgent = settings?.defaultAgent;
+
   return (
     <div>
       <div className="mb-4">
         <h2 className="text-base font-medium">Configuration</h2>
         <p className="text-sm text-muted-foreground">Select the LLM provider and model for chat. Only providers with configured API keys appear in the dropdown.</p>
       </div>
-      <ActiveConfig settings={settings} onSave={handleSaveActive} />
+      {sdkAgentActive && (
+        <div className="rounded-lg border border-border bg-muted/50 px-4 py-3 mb-4">
+          <p className="text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">{defaultAgent}</span> manages its own LLM directly. These settings only apply when using a coding agent without built-in SDK support.
+          </p>
+        </div>
+      )}
+      <div className={sdkAgentActive ? 'opacity-50 pointer-events-none' : ''}>
+        <ActiveConfig settings={settings} onSave={handleSaveActive} />
+      </div>
     </div>
   );
 }
@@ -760,137 +772,6 @@ function CustomProviderDialog({ open, initial, onSave, onCancel }) {
         </button>
       </div>
     </Dialog>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Combined LLM page — Default Provider + Providers
-// ─────────────────────────────────────────────────────────────────────────────
-
-export function ChatLlmPage() {
-  const [settings, setSettings] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [showDialog, setShowDialog] = useState(false);
-  const [editingProvider, setEditingProvider] = useState(null);
-
-  const loadSettings = async () => {
-    try {
-      const result = await getChatSettings();
-      setSettings(result);
-    } catch {
-      // ignore
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadSettings();
-  }, []);
-
-  // Default Provider handlers
-  const handleSaveActive = async (provider, model, maxTokens) => {
-    const result = await setActiveLlm(provider, model, maxTokens);
-    if (result?.success) await loadSettings();
-    return result;
-  };
-
-  // Providers handlers
-  const handleUpdateCredential = async (credKey, value) => {
-    await updateProviderCredential(credKey, value);
-    await loadSettings();
-  };
-
-  const handleAddCustom = async (config) => {
-    await addCustomProvider(config);
-    setShowDialog(false);
-    await loadSettings();
-  };
-
-  const handleEditCustom = async (config) => {
-    if (editingProvider) {
-      await updateCustomProvider(editingProvider.key, config);
-      setEditingProvider(null);
-      setShowDialog(false);
-      await loadSettings();
-    }
-  };
-
-  const handleRemoveCustom = async (key) => {
-    await removeCustomProvider(key);
-    await loadSettings();
-  };
-
-  const openAdd = () => { setEditingProvider(null); setShowDialog(true); };
-  const openEdit = (provider) => { setEditingProvider(provider); setShowDialog(true); };
-  const closeDialog = () => { setShowDialog(false); setEditingProvider(null); };
-
-  if (loading) {
-    return <div className="h-48 animate-pulse rounded-md bg-border/50" />;
-  }
-
-  if (settings?.error) {
-    return <p className="text-sm text-destructive">{settings.error}</p>;
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* Default Provider section */}
-      <div>
-        <div className="mb-4">
-          <h2 className="text-base font-medium">Default Provider</h2>
-          <p className="text-sm text-muted-foreground">Select the LLM provider and model for chat. Only providers with configured API keys appear in the dropdown.</p>
-        </div>
-        <ActiveConfig settings={settings} onSave={handleSaveActive} />
-      </div>
-
-      {/* Providers section */}
-      <div>
-        <div className="mb-4">
-          <h2 className="text-base font-medium">Providers</h2>
-          <p className="text-sm text-muted-foreground">Configure API keys and credentials for each LLM provider.</p>
-        </div>
-
-        {settings?.builtinProviders && (
-          <div className="mb-6">
-            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Built-in</h4>
-            <div className="space-y-8">
-              {Object.entries(settings.builtinProviders).map(([slug, prov]) => (
-                <ProviderCard
-                  key={slug}
-                  slug={slug}
-                  name={prov.name}
-                  credentials={prov.credentials}
-                  credentialStatuses={settings.credentialStatuses || []}
-                  onUpdateCredential={handleUpdateCredential}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="space-y-8">
-          <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Custom (OpenAI Compatible API)</h4>
-          {settings?.customProviders?.map((cp) => (
-            <CustomProviderCard key={cp.key} provider={cp} onEdit={openEdit} onRemove={handleRemoveCustom} />
-          ))}
-          <button
-            onClick={openAdd}
-            className="w-full rounded-lg border border-dashed p-4 text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors flex items-center justify-center gap-2"
-          >
-            <PlusIcon size={14} />
-            Add OpenAI Compatible API
-          </button>
-        </div>
-
-        <CustomProviderDialog
-          open={showDialog}
-          initial={editingProvider}
-          onSave={editingProvider ? handleEditCustom : handleAddCustom}
-          onCancel={closeDialog}
-        />
-      </div>
-    </div>
   );
 }
 
