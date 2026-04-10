@@ -57,17 +57,17 @@ export function ChatConfigPage() {
 
   return (
     <div>
+      {sdkAgentActive && (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 mb-4">
+          <p className="text-sm text-destructive">
+            {defaultAgent} manages its own LLM directly. These settings only apply when using a coding agent without built-in SDK support.
+          </p>
+        </div>
+      )}
       <div className="mb-4">
         <h2 className="text-base font-medium">Configuration</h2>
         <p className="text-sm text-muted-foreground">Select the LLM provider and model for chat. Only providers with configured API keys appear in the dropdown.</p>
       </div>
-      {sdkAgentActive && (
-        <div className="rounded-lg border border-border bg-muted/50 px-4 py-3 mb-4">
-          <p className="text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">{defaultAgent}</span> manages its own LLM directly. These settings only apply when using a coding agent without built-in SDK support.
-          </p>
-        </div>
-      )}
       <div className={sdkAgentActive ? 'opacity-50 pointer-events-none' : ''}>
         <ActiveConfig settings={settings} onSave={handleSaveActive} />
       </div>
