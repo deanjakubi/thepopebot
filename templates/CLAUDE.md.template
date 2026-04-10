@@ -5,6 +5,7 @@ This is a [thepopebot](https://github.com/stephengpope/thepopebot) project.
 ## Directories
 
 - **`agent-job/`** — Agent job configuration: system prompt (`SYSTEM.md`), heartbeat prompt, and cron schedules (`CRONS.json`).
+- **`coding-workspace/`** — Optional system prompt (`SYSTEM.md`) for code mode workspaces. Empty by default.
 - **`agents/`** — Custom agent definitions. Each subdirectory defines an agent (see Managing Agents below).
 - **`event-handler/`** — Event handler configuration: chat system prompts, trigger definitions (`TRIGGERS.json`), cluster templates, and LiteLLM proxy config.
 - **`skills/library/`** — Skill plugins. Activate by symlinking into `skills/active/`.
