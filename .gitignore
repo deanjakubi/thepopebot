@@ -8,7 +8,7 @@
 .claude/*
 .playwright-mcp/
 
-# Pi system prompt (generated at runtime from SOUL.md)
+# Pi system prompt (generated at runtime)
 .pi/SYSTEM.md
 
 # Database

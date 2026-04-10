@@ -8,8 +8,7 @@ Two directories define who the agent is and how it behaves:
 
 | File | Purpose |
 |------|---------|
-| `SOUL.md` | Agent identity, personality traits, and values |
-| `SYSTEM.md` | Agent runtime environment |
+| `SYSTEM.md` | Agent system prompt (identity + runtime environment) |
 | `HEARTBEAT.md` | Self-monitoring behavior |
 | `CRONS.json` | Scheduled job definitions |
 

@@ -11,7 +11,7 @@ This directory contains files that get copied into user projects when they run `
 
 ## What belongs here
 
-- **Agent job config**: `agent-job/SOUL.md`, `agent-job/CRONS.json`, etc.
+- **Agent job config**: `agent-job/SYSTEM.md`, `agent-job/CRONS.json`, etc.
 - **Event handler config**: `event-handler/agent-chat/SYSTEM.md`, `event-handler/TRIGGERS.json`, etc.
 - **GitHub Actions workflows**: `.github/workflows/`
 - **Docker compose**: `docker-compose.yml`

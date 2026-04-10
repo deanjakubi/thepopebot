@@ -368,7 +368,7 @@ Headless `run.sh` always reads from port `7681` (the primary tab's session). Thi
 | Variable | Purpose |
 |----------|---------|
 | `PROMPT` | Task prompt passed to agent |
-| `SYSTEM_PROMPT` | Optional system prompt. Each agent handles differently (see setup.sh). Cleared on each run if empty. |
+| `SYSTEM_PROMPT` | Optional system prompt (fallback — prefer `/home/coding-agent/SYSTEM.md` file on volume). Each agent handles differently (see setup.sh). |
 | `PERMISSION` | `plan` or `code` (default: `code`). Controls permission/approval mode for agents that support it. |
 | `CONTINUE_SESSION` | `1` = resume previous session. Requires volume mount at `/home/coding-agent`. |
 | `LLM_MODEL` | Model override |
@@ -413,18 +413,18 @@ Mount at `/home/coding-agent` (not `/home/coding-agent/workspace`) so both works
 
 ## System Prompt Handling
 
-`$SYSTEM_PROMPT` is an optional env var passed to containers. In practice, it is **only set by cluster workers** (`lib/cluster/execute.js`). Interactive containers and headless runs from the chat UI do not pass it — no caller currently provides a `systemPrompt` to `runInteractiveContainer()` or `runHeadlessContainer()`.
+The event handler pre-renders the system prompt (via `buildCodingAgentSystemPrompt()`) and writes it to `/home/coding-agent/SYSTEM.md` on the volume before the container starts. Each agent's `setup.sh` reads this file and distributes it to where the agent expects it.
 
-Each agent's `setup.sh` writes the prompt to wherever the agent reads it. If `$SYSTEM_PROMPT` is empty, the file is removed (so stale prompts don't persist across runs).
+For **agent-job containers** (which use named volumes the EH can't write to), `setup.sh` falls back to `build-system-prompt.sh` which reads `agent-job/SYSTEM.md` from the cloned workspace.
 
 | Agent | Method |
 |-------|--------|
-| claude-code | `--append-system-prompt` flag in run.sh (not setup.sh) |
-| pi-coding-agent | Written to `.pi/SYSTEM.md` in workspace |
-| opencode | Written to `AGENTS.md` in workspace root |
-| codex-cli | Written to `AGENTS.md` in workspace root |
-| gemini-cli | Written to `~/.gemini/SYSTEM.md` + `GEMINI_SYSTEM_MD` env var |
-| kimi-cli | Written to `AGENTS.md` in workspace root |
+| claude-code | `--append-system-prompt-file /home/coding-agent/SYSTEM.md` in run.sh/interactive.sh |
+| pi-coding-agent | Copied to `.pi/SYSTEM.md` in workspace |
+| opencode | Copied to `AGENTS.md` in workspace root |
+| codex-cli | Copied to `AGENTS.md` in workspace root |
+| gemini-cli | Copied to `~/.gemini/SYSTEM.md` + `GEMINI_SYSTEM_MD` env var |
+| kimi-cli | Copied to `AGENTS.md` in workspace root |
 
 ## MCP Server Registration
 

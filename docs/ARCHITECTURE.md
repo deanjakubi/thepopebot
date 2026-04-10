@@ -58,8 +58,7 @@ This is the user project structure after running `npx thepopebot init`:
 │   ├── extensions/                # Pi extensions (env-sanitizer for secret filtering)
 │   └── skills/                    # Custom skills for the agent
 ├── agent-job/
-│   ├── SOUL.md                    # Agent identity and personality
-│   ├── SYSTEM.md                  # Agent runtime environment
+│   ├── SYSTEM.md                  # Agent system prompt (identity + runtime environment)
 │   ├── HEARTBEAT.md               # Self-monitoring
 │   └── CRONS.json                 # Scheduled jobs
 ├── event-handler/

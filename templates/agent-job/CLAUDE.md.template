@@ -4,8 +4,7 @@ This directory contains your agent job configuration files — system prompts, s
 
 ## Files
 
-- **`SOUL.md`** — Agent personality, identity, and values. Included in every agent job system prompt.
-- **`SYSTEM.md`** — Runtime environment documentation injected into the agent's context.
+- **`SYSTEM.md`** — Agent system prompt: identity, runtime environment, and instructions. Rendered with full template support (`{{skills}}`, `{{datetime}}`, file includes).
 - **`HEARTBEAT.md`** — Prompt for the agent's periodic heartbeat cron job.
 - **`CRONS.json`** — Scheduled job definitions, loaded at server startup.
 

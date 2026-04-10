@@ -11,7 +11,7 @@
 # Playwright MCP
 .playwright-mcp/
 
-# Pi system prompt (generated at runtime from SOUL.md)
+# Pi system prompt (generated at runtime)
 .pi/SYSTEM.md
 
 # Dynamically activated skills (created at container runtime, not user config)

@@ -12,7 +12,5 @@ if [ -S "$SOCKET" ]; then
   usermod -aG "$SOCK_GROUP" coding-agent
 fi
 
-# Ensure coding-agent owns the data directory (SQLite needs write access)
-[ -d /app/data ] && chown -R coding-agent:coding-agent /app/data
 
 exec gosu coding-agent "$@"

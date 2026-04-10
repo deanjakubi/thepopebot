@@ -109,5 +109,5 @@ These are managed by `chatStream()` in `index.js` — adapters should not duplic
 - **DB persistence** — `chatStream()` saves user messages, assistant text, and tool invocations
 - **Chat creation** — `chatStream()` creates the chat and workspace DB records
 - **Auto-titling** — `chatStream()` generates a title after the first message
-- **System prompt loading** — `chatStream()` reads SOUL.md/SYSTEM.md and passes it as `systemPrompt`
+- **System prompt loading** — `chatStream()` calls `buildCodingAgentSystemPrompt()` and passes the result as `systemPrompt`
 - **Skill activation** — `ensureSkills()` runs before the adapter is called

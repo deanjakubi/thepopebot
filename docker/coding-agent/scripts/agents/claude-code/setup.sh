@@ -1,7 +1,13 @@
 #!/bin/bash
 # Claude Code setup — trust config, onboarding skip, Playwright MCP
 
-source /scripts/common/build-system-prompt.sh
+# Prefer pre-rendered system prompt from event handler (written to volume)
+if [ -f /home/coding-agent/SYSTEM.md ]; then
+    SYSTEM_PROMPT=$(cat /home/coding-agent/SYSTEM.md)
+    export SYSTEM_PROMPT
+else
+    source /scripts/common/build-system-prompt.sh
+fi
 
 WORKSPACE_DIR=$(pwd)
 

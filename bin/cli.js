@@ -420,7 +420,7 @@ function reset(filePath) {
       console.log(`  ${destPath(file)}`);
     }
     console.log('\nUsage: thepopebot reset <file>');
-    console.log('Example: thepopebot reset agent-job/SOUL.md\n');
+    console.log('Example: thepopebot reset agent-job/SYSTEM.md\n');
     return;
   }
 
@@ -502,7 +502,7 @@ function diff(filePath) {
       console.log('  All files match package templates.');
     }
     console.log('\nUsage: thepopebot diff <file>');
-    console.log('Example: thepopebot diff agent-job/SOUL.md\n');
+    console.log('Example: thepopebot diff agent-job/SYSTEM.md\n');
     return;
   }
 

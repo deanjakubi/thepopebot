@@ -10,7 +10,7 @@ When you ran `thepopebot init` the first time, it scaffolded a project folder wi
 
 | Files | What they do |
 |-------|-------------|
-| `agent-job/SOUL.md`, `SYSTEM.md`, `CRONS.json`, etc. | Your agent's personality, behavior, prompts, and scheduled jobs |
+| `agent-job/SYSTEM.md`, `CRONS.json`, etc. | Your agent's behavior, prompts, and scheduled jobs |
 | `event-handler/TRIGGERS.json`, `SUMMARY.md`, etc. | Your webhook triggers and event handler prompts |
 
 **Managed files** — These are infrastructure files that need to stay in sync with the package version. `init` auto-updates them for you:
