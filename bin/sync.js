@@ -271,10 +271,13 @@ function buildDockerImage(projectPath) {
   const version = pkg.version;
   const imageTag = `stephengpope/thepopebot:event-handler-${version}`;
 
-  // Copy web/ to project for Docker build context
+  // Copy web/ and docker/ to project for Docker build context
   const webSrc = path.join(PACKAGE_DIR, 'web');
   const webDest = path.join(projectPath, 'web');
+  const dockerSrc = path.join(PACKAGE_DIR, 'docker');
+  const dockerDest = path.join(projectPath, 'docker');
   fs.cpSync(webSrc, webDest, { recursive: true });
+  fs.cpSync(dockerSrc, dockerDest, { recursive: true });
 
   try {
     execSync(`docker build -f - -t ${imageTag} .`, {
@@ -284,6 +287,7 @@ function buildDockerImage(projectPath) {
     });
   } finally {
     fs.rmSync(webDest, { recursive: true, force: true });
+    fs.rmSync(dockerDest, { recursive: true, force: true });
   }
 
   // Clean up dangling images from previous builds
