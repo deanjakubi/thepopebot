@@ -211,7 +211,7 @@ export default function TerminalView({ codeWorkspaceId, wsPath, isActive = true,
     term.open(containerRef.current);
 
     const style = document.createElement('style');
-    style.textContent = `.xterm { padding: 5px; background-color: ${theme.background} !important; } .xterm-viewport { background-color: ${theme.background} !important; }`;
+    style.textContent = `.xterm { padding: 5px; background-color: ${theme.background} !important; } .xterm-viewport { background-color: ${theme.background} !important; } .xterm-rows span { pointer-events: none; }`;
     containerRef.current.appendChild(style);
     styleRef.current = style;
 
@@ -226,6 +226,39 @@ export default function TerminalView({ codeWorkspaceId, wsPath, isActive = true,
     }
 
     fitAddon.fit();
+
+    // Mobile touch scroll: translate finger swipes into terminal scrollLines()
+    const screenEl = containerRef.current.querySelector('.xterm-screen');
+    let lastTouchY = null;
+    let touchScrollAccum = 0;
+    const LINE_HEIGHT = 15; // approximate px per line at fontSize 16
+
+    const onTouchStart = (ev) => {
+      if (ev.touches.length === 1) {
+        lastTouchY = ev.touches[0].clientY;
+        touchScrollAccum = 0;
+      }
+    };
+    const onTouchMove = (ev) => {
+      if (lastTouchY === null || ev.touches.length !== 1) return;
+      const currentY = ev.touches[0].clientY;
+      const deltaY = lastTouchY - currentY;
+      lastTouchY = currentY;
+      touchScrollAccum += deltaY;
+      const lines = Math.trunc(touchScrollAccum / LINE_HEIGHT);
+      if (lines !== 0) {
+        term.scrollLines(lines);
+        touchScrollAccum -= lines * LINE_HEIGHT;
+      }
+      ev.preventDefault();
+    };
+    const onTouchEnd = () => { lastTouchY = null; touchScrollAccum = 0; };
+
+    if (screenEl) {
+      screenEl.addEventListener('touchstart', onTouchStart, { passive: true });
+      screenEl.addEventListener('touchmove', onTouchMove, { passive: false });
+      screenEl.addEventListener('touchend', onTouchEnd, { passive: true });
+    }
 
     term.onData((data) => {
       const ws = wsRef.current;
@@ -269,6 +302,11 @@ export default function TerminalView({ codeWorkspaceId, wsPath, isActive = true,
       clearTimeout(resizeTimeout);
       clearTimeout(retryTimer.current);
       window.removeEventListener('resize', handleResize);
+      if (screenEl) {
+        screenEl.removeEventListener('touchstart', onTouchStart);
+        screenEl.removeEventListener('touchmove', onTouchMove);
+        screenEl.removeEventListener('touchend', onTouchEnd);
+      }
       if (wsRef.current) wsRef.current.close();
       term.dispose();
     };
