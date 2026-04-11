@@ -227,8 +227,11 @@ export default function TerminalView({ codeWorkspaceId, wsPath, isActive = true,
 
     fitAddon.fit();
 
-    // Mobile touch scroll: translate finger swipes into terminal scrollLines()
-    const screenEl = containerRef.current.querySelector('.xterm-screen');
+    // Mobile touch scroll: intercept touch events in capture phase (before xterm's
+    // own handlers) and translate finger swipes into terminal scrollLines() calls.
+    // Without capture + stopPropagation, xterm's internal touch handlers conflict
+    // by simultaneously manipulating viewport.scrollTop.
+    const termContainer = containerRef.current;
     let lastTouchY = null;
     let touchScrollAccum = 0;
     const LINE_HEIGHT = 15; // approximate px per line at fontSize 16
@@ -251,14 +254,13 @@ export default function TerminalView({ codeWorkspaceId, wsPath, isActive = true,
         touchScrollAccum -= lines * LINE_HEIGHT;
       }
       ev.preventDefault();
+      ev.stopPropagation();
     };
     const onTouchEnd = () => { lastTouchY = null; touchScrollAccum = 0; };
 
-    if (screenEl) {
-      screenEl.addEventListener('touchstart', onTouchStart, { passive: true });
-      screenEl.addEventListener('touchmove', onTouchMove, { passive: false });
-      screenEl.addEventListener('touchend', onTouchEnd, { passive: true });
-    }
+    termContainer.addEventListener('touchstart', onTouchStart, { passive: true, capture: true });
+    termContainer.addEventListener('touchmove', onTouchMove, { passive: false, capture: true });
+    termContainer.addEventListener('touchend', onTouchEnd, { passive: true, capture: true });
 
     term.onData((data) => {
       const ws = wsRef.current;
@@ -302,11 +304,9 @@ export default function TerminalView({ codeWorkspaceId, wsPath, isActive = true,
       clearTimeout(resizeTimeout);
       clearTimeout(retryTimer.current);
       window.removeEventListener('resize', handleResize);
-      if (screenEl) {
-        screenEl.removeEventListener('touchstart', onTouchStart);
-        screenEl.removeEventListener('touchmove', onTouchMove);
-        screenEl.removeEventListener('touchend', onTouchEnd);
-      }
+      termContainer.removeEventListener('touchstart', onTouchStart, { capture: true });
+      termContainer.removeEventListener('touchmove', onTouchMove, { capture: true });
+      termContainer.removeEventListener('touchend', onTouchEnd, { capture: true });
       if (wsRef.current) wsRef.current.close();
       term.dispose();
     };
