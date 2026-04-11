@@ -77,6 +77,37 @@ function formatContent(content) {
   return JSON.stringify(content, null, 2);
 }
 
+function ThinkingBlock({ part }) {
+  const [expanded, setExpanded] = useState(false);
+  const isStreaming = part.state === 'input-streaming' || part.state === 'input-available';
+  const content = typeof part.input === 'string' ? part.input : '';
+
+  return (
+    <div className="my-1">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors py-0.5"
+      >
+        <ChevronDownIcon
+          size={12}
+          className={cn('transition-transform shrink-0', !expanded && '-rotate-90')}
+        />
+        {isStreaming && <SpinnerIcon size={12} className="shrink-0" />}
+        {isStreaming ? (
+          <span className="thinking-shimmer">Thinking...</span>
+        ) : (
+          <span>Thoughts</span>
+        )}
+      </button>
+      {expanded && (
+        <div className="mt-1.5 ml-4 pl-3 border-l border-border/50 text-xs text-muted-foreground/80 whitespace-pre-wrap leading-relaxed max-h-64 overflow-y-auto">
+          {content || <span className="italic opacity-50">...</span>}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ToolCall({ part, className }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -451,6 +482,9 @@ export function PreviewMessage({ message, isLoading, onRetry, onEdit }) {
                           );
                         }
                         if (part.type?.startsWith('tool-')) {
+                          if (part.toolName === '__thinking__') {
+                            return <ThinkingBlock key={part.toolCallId || i} part={part} />;
+                          }
                           const prevPart = message.parts[i - 1];
                           const afterText = prevPart?.type === 'text';
                           return <ToolCall key={part.toolCallId || i} part={part} className={afterText ? 'mt-3' : undefined} />;
@@ -460,7 +494,7 @@ export function PreviewMessage({ message, isLoading, onRetry, onEdit }) {
                       {showWorking && (
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <SpinnerIcon size={14} />
-                          <span>Working...</span>
+                          <span className="thinking-shimmer">Working...</span>
                         </div>
                       )}
                     </>
@@ -469,7 +503,7 @@ export function PreviewMessage({ message, isLoading, onRetry, onEdit }) {
                   ) : isLoading && !hasToolParts ? (
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <SpinnerIcon size={14} />
-                      <span>Working...</span>
+                      <span className="thinking-shimmer">Working...</span>
                     </div>
                   ) : null}
                 </>
