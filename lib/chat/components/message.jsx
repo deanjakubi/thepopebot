@@ -310,7 +310,7 @@ export function PreviewMessage({ message, isLoading, onRetry, onEdit }) {
       return;
     }
     setShowWorking(false);
-    const timer = setTimeout(() => setShowWorking(true), 500);
+    const timer = setTimeout(() => setShowWorking(true), 250);
     return () => clearTimeout(timer);
   }, [isLoading, partsLength, textLength, hasRunningTool]);
 
