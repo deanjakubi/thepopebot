@@ -211,7 +211,7 @@ export default function TerminalView({ codeWorkspaceId, wsPath, isActive = true,
     term.open(containerRef.current);
 
     const style = document.createElement('style');
-    style.textContent = `.xterm { padding: 5px; background-color: ${theme.background} !important; } .xterm-viewport { background-color: ${theme.background} !important; } .xterm-rows span { pointer-events: none; }`;
+    style.textContent = `.xterm { padding: 5px; background-color: ${theme.background} !important; } .xterm-viewport { background-color: ${theme.background} !important; touch-action: none; } .xterm-rows span { pointer-events: none; }`;
     containerRef.current.appendChild(style);
     styleRef.current = style;
 
@@ -227,10 +227,12 @@ export default function TerminalView({ codeWorkspaceId, wsPath, isActive = true,
 
     fitAddon.fit();
 
-    // Mobile touch scroll: intercept touch events in capture phase (before xterm's
-    // own handlers) and translate finger swipes into terminal scrollLines() calls.
-    // Without capture + stopPropagation, xterm's internal touch handlers conflict
-    // by simultaneously manipulating viewport.scrollTop.
+    // Mobile touch scroll: xterm v5's .xterm-viewport is overflow-y:scroll and its
+    // scroll event listener syncs scrollTop → buffer position. touch-action:none on
+    // the viewport (injected above) prevents the compositor from natively scrolling
+    // it, so we manually translate finger swipes into scrollLines() calls. Capture
+    // phase + stopPropagation blocks xterm's own touch handlers on .xterm from
+    // also setting viewport.scrollTop.
     const termContainer = containerRef.current;
     let lastTouchY = null;
     let touchScrollAccum = 0;
@@ -241,6 +243,7 @@ export default function TerminalView({ codeWorkspaceId, wsPath, isActive = true,
         lastTouchY = ev.touches[0].clientY;
         touchScrollAccum = 0;
       }
+      ev.stopPropagation();
     };
     const onTouchMove = (ev) => {
       if (lastTouchY === null || ev.touches.length !== 1) return;
@@ -258,7 +261,7 @@ export default function TerminalView({ codeWorkspaceId, wsPath, isActive = true,
     };
     const onTouchEnd = () => { lastTouchY = null; touchScrollAccum = 0; };
 
-    termContainer.addEventListener('touchstart', onTouchStart, { passive: true, capture: true });
+    termContainer.addEventListener('touchstart', onTouchStart, { passive: false, capture: true });
     termContainer.addEventListener('touchmove', onTouchMove, { passive: false, capture: true });
     termContainer.addEventListener('touchend', onTouchEnd, { passive: true, capture: true });
 
