@@ -305,6 +305,38 @@ async function init() {
     console.log('  Created .claude/skills → ../skills/active');
   }
 
+  // Create .codex/skills → ../skills/active symlink
+  const codexSkillsLink = path.join(cwd, '.codex', 'skills');
+  if (!fs.existsSync(codexSkillsLink)) {
+    fs.mkdirSync(path.dirname(codexSkillsLink), { recursive: true });
+    createDirLink('../skills/active', codexSkillsLink);
+    console.log('  Created .codex/skills → ../skills/active');
+  }
+
+  // Create .gemini/skills → ../skills/active symlink
+  const geminiSkillsLink = path.join(cwd, '.gemini', 'skills');
+  if (!fs.existsSync(geminiSkillsLink)) {
+    fs.mkdirSync(path.dirname(geminiSkillsLink), { recursive: true });
+    createDirLink('../skills/active', geminiSkillsLink);
+    console.log('  Created .gemini/skills → ../skills/active');
+  }
+
+  // Create .kimi/skills → ../skills/active symlink
+  const kimiSkillsLink = path.join(cwd, '.kimi', 'skills');
+  if (!fs.existsSync(kimiSkillsLink)) {
+    fs.mkdirSync(path.dirname(kimiSkillsLink), { recursive: true });
+    createDirLink('../skills/active', kimiSkillsLink);
+    console.log('  Created .kimi/skills → ../skills/active');
+  }
+
+  // Create .agents/skills → ../skills/active symlink
+  const agentsSkillsLink = path.join(cwd, '.agents', 'skills');
+  if (!fs.existsSync(agentsSkillsLink)) {
+    fs.mkdirSync(path.dirname(agentsSkillsLink), { recursive: true });
+    createDirLink('../skills/active', agentsSkillsLink);
+    console.log('  Created .agents/skills → ../skills/active');
+  }
+
   // Report backed-up files
   if (backedUp.length > 0) {
     console.log(`\n  Backed up ${backedUp.length} file(s) to ${path.relative(cwd, backupDir)}/`);

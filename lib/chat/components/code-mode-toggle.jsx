@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { GitBranchIcon, ChevronDownIcon, SpinnerIcon, XIcon } from './icons.js';
+import { GitBranchIcon, ChevronDownIcon, SpinnerIcon, XIcon, PlusIcon } from './icons.js';
 import { Combobox } from './ui/combobox.js';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from './ui/dropdown-menu.js';
 import { cn } from '../utils.js';
@@ -30,12 +30,14 @@ export function RepoBranchPicker({
   onBranchChange,
   getRepositories,
   getBranches,
+  createRepository,
 }) {
   const [repos, setRepos] = useState([]);
   const [branches, setBranches] = useState([]);
   const [loadingRepos, setLoadingRepos] = useState(false);
   const [loadingBranches, setLoadingBranches] = useState(false);
   const [reposLoaded, setReposLoaded] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   // Load repos eagerly on mount
   useEffect(() => {
@@ -67,6 +69,11 @@ export function RepoBranchPicker({
     }).catch(() => setLoadingBranches(false));
   }, [repo]);
 
+  const handleRepoCreated = useCallback((fullName) => {
+    setRepos((prev) => [...prev, { full_name: fullName, default_branch: 'main' }]);
+    onRepoChange(fullName);
+  }, [onRepoChange]);
+
   const repoOptions = repos.map((r) => ({ value: r.full_name, label: r.full_name }));
   const branchOptions = branches.map((b) => ({ value: b.name, label: b.name }));
 
@@ -80,6 +87,11 @@ export function RepoBranchPicker({
           placeholder="Select repository..."
           loading={loadingRepos}
           highlight={!repo && !loadingRepos}
+          footerAction={createRepository ? {
+            icon: <PlusIcon size={14} />,
+            label: 'Create new repository...',
+            onClick: () => setShowCreateDialog(true),
+          } : undefined}
         />
       </div>
       <div className={cn("w-full sm:w-auto sm:min-w-[200px] sm:max-w-[200px]", !repo && "opacity-50 pointer-events-none")}>
@@ -92,7 +104,96 @@ export function RepoBranchPicker({
           highlight={!!repo && !branch && !loadingBranches}
         />
       </div>
+      {showCreateDialog && (
+        <CreateRepoDialog
+          onClose={() => setShowCreateDialog(false)}
+          onCreate={handleRepoCreated}
+          createRepository={createRepository}
+        />
+      )}
     </div>
+  );
+}
+
+function CreateRepoDialog({ onClose, onCreate, createRepository }) {
+  const [name, setName] = useState('');
+  const [creating, setCreating] = useState(false);
+  const [error, setError] = useState(null);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    setTimeout(() => inputRef.current?.focus(), 0);
+  }, []);
+
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [onClose]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const trimmed = name.trim();
+    if (!trimmed || creating) return;
+    setCreating(true);
+    setError(null);
+    try {
+      const repo = await createRepository(trimmed);
+      onCreate(repo.full_name);
+      onClose();
+    } catch (err) {
+      setError(err.message || 'Failed to create repository');
+      setCreating(false);
+    }
+  };
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
+      <div
+        className="relative z-50 w-full max-w-md mx-4 rounded-lg border border-border bg-background p-6 shadow-lg"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-base font-semibold">Create Repository</h3>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+            <XIcon size={16} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <label className="block text-sm text-muted-foreground mb-1.5">Repository name</label>
+          <input
+            ref={inputRef}
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="my-project"
+            className="w-full rounded-md border border-border bg-muted px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+          />
+          {error && <p className="text-xs text-destructive mt-2">{error}</p>}
+          <div className="mt-5 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-3 py-1.5 text-sm border border-border text-muted-foreground hover:text-foreground rounded-md transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={!name.trim() || creating}
+              className="px-3 py-1.5 text-sm font-medium bg-foreground text-background hover:bg-foreground/90 disabled:opacity-50 rounded-md transition-colors"
+            >
+              {creating ? 'Creating...' : 'Create'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>,
+    document.body
   );
 }
 

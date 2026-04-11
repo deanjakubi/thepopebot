@@ -21,6 +21,16 @@ const fetchBranches = (repoFullName) =>
     .then(r => r.json())
     .catch(() => []);
 
+const fetchCreateRepository = (name) =>
+  fetch('/code/repositories/create', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  }).then(r => {
+    if (!r.ok) return r.json().then(d => { throw new Error(d.error || 'Failed to create repository'); });
+    return r.json();
+  });
+
 export function Chat({ chatId, initialMessages = [], workspace = null, chatMode = null }) {
   const [input, setInput] = useState('');
   const [files, setFiles] = useState([]);
@@ -296,6 +306,7 @@ export function Chat({ chatId, initialMessages = [], workspace = null, chatMode 
                   onBranchChange={handleBranchChange}
                   getRepositories={fetchRepositories}
                   getBranches={fetchBranches}
+                  createRepository={fetchCreateRepository}
                 />
               )}
               <div className="flex flex-wrap items-center justify-center gap-3 mt-4">

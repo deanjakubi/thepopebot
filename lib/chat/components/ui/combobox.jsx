@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { ChevronDownIcon, CheckIcon, SearchIcon } from '../icons.js';
 import { cn } from '../../utils.js';
 
-export function Combobox({ options = [], value, onChange, placeholder = 'Select...', loading = false, disabled = false, highlight = false, side = 'bottom', onOpen, triggerClassName, triggerLabel }) {
+export function Combobox({ options = [], value, onChange, placeholder = 'Select...', loading = false, disabled = false, highlight = false, side = 'bottom', onOpen, triggerClassName, triggerLabel, footerAction }) {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState('');
   const ref = useRef(null);
@@ -117,6 +117,22 @@ export function Combobox({ options = [], value, onChange, placeholder = 'Select.
               ))
             )}
           </div>
+          {footerAction && (
+            <div className="border-t border-border p-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  setFilter('');
+                  footerAction.onClick();
+                }}
+                className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm text-left transition-colors hover:bg-accent text-muted-foreground"
+              >
+                {footerAction.icon}
+                <span>{footerAction.label}</span>
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
