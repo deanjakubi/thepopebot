@@ -148,6 +148,13 @@
       "when": 1774327178886,
       "tag": "0020_natural_fabian_cortez",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "6",
+      "when": 1775865600000,
+      "tag": "0021_coding_agent_workspace",
+      "breakpoints": true
     }
   ]
 }

@@ -46,8 +46,10 @@ export function ChatInput({ input, setInput, onSubmit, status, stop, files, setF
   const fileInputRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [modeDropdownOpen, setModeDropdownOpen] = useState(false);
+  const [agentPickerOpen, setAgentPickerOpen] = useState(false);
   const [partialText, setPartialText] = useState('');
   const dropdownRef = useRef(null);
+  const agentPickerRef = useRef(null);
   const isStreaming = status === 'streaming' || status === 'submitted';
   const volumeRef = useRef(0);
 
@@ -93,6 +95,25 @@ export function ChatInput({ input, setInput, onSubmit, status, stop, files, setF
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [modeDropdownOpen]);
+
+  // Close agent picker on outside click or Escape
+  useEffect(() => {
+    if (!agentPickerOpen) return;
+    const handleClickOutside = (e) => {
+      if (agentPickerRef.current && !agentPickerRef.current.contains(e.target)) {
+        setAgentPickerOpen(false);
+      }
+    };
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setAgentPickerOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [agentPickerOpen]);
 
   const handleFiles = useCallback((fileList) => {
     const newFiles = Array.from(fileList).filter(isAcceptedType);
@@ -303,35 +324,64 @@ export function ChatInput({ input, setInput, onSubmit, status, stop, files, setF
                 </div>
               )}
 
-              {/* Interactive toggle */}
+              {/* Interactive toggle — left-click to launch with default agent,
+                  right-click to pick a specific agent (when multiple are available) */}
               {codeModeSettings && !codeModeSettings.isInteractiveActive && (
-                <button
-                  type="button"
-                  onClick={codeModeSettings.onInteractiveToggle}
-                  disabled={codeModeSettings.togglingMode || codeModeSettings.isInteractiveActive}
-                  className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {codeModeSettings.togglingMode && (
-                    <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
+                <div className="relative" ref={agentPickerRef}>
+                  {/* Agent picker popup — appears above the toggle on right-click */}
+                  {agentPickerOpen && codeModeSettings.availableAgents?.length > 1 && (
+                    <div className="absolute bottom-full left-0 mb-1.5 z-50 min-w-[140px] rounded-md border border-border bg-background shadow-md py-1 overflow-hidden">
+                      <p className="px-3 pt-0.5 pb-1 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Launch with</p>
+                      {codeModeSettings.availableAgents.map(agent => (
+                        <button
+                          key={agent.value}
+                          type="button"
+                          onClick={() => {
+                            setAgentPickerOpen(false);
+                            codeModeSettings.onInteractiveToggle(agent.value);
+                          }}
+                          className="w-full text-left px-3 py-1.5 text-xs text-foreground hover:bg-muted transition-colors"
+                        >
+                          {agent.label}
+                        </button>
+                      ))}
+                    </div>
                   )}
-                  <span
-                    className={cn(
-                      'relative inline-flex h-3.5 w-6 shrink-0 rounded-full transition-colors duration-200',
-                      codeModeSettings.isInteractiveActive ? 'bg-primary' : 'bg-muted-foreground/30'
-                    )}
+                  <button
+                    type="button"
+                    onClick={() => codeModeSettings.onInteractiveToggle()}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      if (!codeModeSettings.togglingMode && codeModeSettings.availableAgents?.length > 1) {
+                        setAgentPickerOpen(prev => !prev);
+                      }
+                    }}
+                    disabled={codeModeSettings.togglingMode || codeModeSettings.isInteractiveActive}
+                    title={codeModeSettings.availableAgents?.length > 1 ? 'Left-click to launch · Right-click to pick agent' : undefined}
+                    className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                   >
+                    {codeModeSettings.togglingMode && (
+                      <svg className="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                    )}
                     <span
                       className={cn(
-                        'absolute top-0.5 left-0.5 h-2.5 w-2.5 rounded-full bg-white shadow-sm transition-transform duration-200',
-                        codeModeSettings.isInteractiveActive && 'translate-x-2.5'
+                        'relative inline-flex h-3.5 w-6 shrink-0 rounded-full transition-colors duration-200',
+                        codeModeSettings.isInteractiveActive ? 'bg-primary' : 'bg-muted-foreground/30'
                       )}
-                    />
-                  </span>
-                  {codeModeSettings.togglingMode ? 'Launching...' : 'Interactive'}
-                </button>
+                    >
+                      <span
+                        className={cn(
+                          'absolute top-0.5 left-0.5 h-2.5 w-2.5 rounded-full bg-white shadow-sm transition-transform duration-200',
+                          codeModeSettings.isInteractiveActive && 'translate-x-2.5'
+                        )}
+                      />
+                    </span>
+                    {codeModeSettings.togglingMode ? 'Launching...' : 'Interactive'}
+                  </button>
+                </div>
               )}
 
               <input

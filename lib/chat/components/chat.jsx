@@ -56,6 +56,14 @@ export function Chat({ chatId, initialMessages = [], workspace = null, chatMode 
   const [workspaceState, setWorkspaceState] = useState(workspace);
   const [diffStats, setDiffStats] = useState(null);
   const [showDiff, setShowDiff] = useState(false);
+  const [availableAgents, setAvailableAgents] = useState(null);
+
+  // Load available coding agents once on mount (for the right-click agent picker)
+  useEffect(() => {
+    import('../actions.js').then(({ getAvailableCodingAgents }) => {
+      getAvailableCodingAgents().then(agents => setAvailableAgents(agents)).catch(() => {});
+    }).catch(() => {});
+  }, []);
 
   // Fetch default repo for agent mode on mount
   // Uses fetch instead of server action to avoid Next.js page revalidation
@@ -221,12 +229,15 @@ export function Chat({ chatId, initialMessages = [], workspace = null, chatMode 
   const isInteractiveActive = !!workspaceState?.containerName;
   const [togglingMode, setTogglingMode] = useState(false);
 
-  const handleInteractiveToggle = useCallback(async () => {
+  const handleInteractiveToggle = useCallback(async (agentOverride) => {
     if (!workspaceState?.id || togglingMode || isInteractiveActive) return;
     setTogglingMode(true);
     try {
       const { startInteractiveMode } = await import('../../code/actions.js');
-      const result = await startInteractiveMode(workspaceState.id);
+      // agentOverride is a string agent id when coming from the right-click picker,
+      // or undefined when coming from a plain left-click (uses global config default)
+      const agent = typeof agentOverride === 'string' ? agentOverride : undefined;
+      const result = await startInteractiveMode(workspaceState.id, agent);
       if (result.containerName) {
         setWorkspaceState(prev => ({ ...prev, containerName: result.containerName }));
       }
@@ -243,6 +254,7 @@ export function Chat({ chatId, initialMessages = [], workspace = null, chatMode 
     isInteractiveActive,
     onInteractiveToggle: handleInteractiveToggle,
     togglingMode,
+    availableAgents,
   };
 
   const handleBranchChange = useCallback((newBranch) => {
