@@ -90,6 +90,8 @@ async function runBot() {
   try {
     const tweet = await generatePapalTweet();
     console.log(`Generated tweet: "${tweet}"`);
+    // Log character count so I can keep an eye on how close we get to the limit
+    console.log(`Character count: ${tweet.length}/280`);
 
     if (DRY_RUN === 'true') {
       console.log('[DRY RUN] Skipping actual tweet posting.');
@@ -102,7 +104,8 @@ async function runBot() {
 }
 
 // Schedule or run immediately
-const schedule = TWEET_SCHEDULE || '0 9 * * *'; // Default: 9 AM daily
+// Changed default to noon so tweets go out during peak engagement hours
+const schedule = TWEET_SCHEDULE || '0 12 * * *';
 
 if (process.argv.includes('--now')) {
   // Run immediately when called with --now flag
