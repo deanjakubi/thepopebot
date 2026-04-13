@@ -105,12 +105,12 @@ async function runBot() {
 
 // Schedule or run immediately
 // Changed default to noon so tweets go out during peak engagement hours
-const schedule = TWEET_SCHEDULE || '0 12 * * *';
+// Note: using 9am instead of noon - seems to get better engagement in my timezone (ET)
+const schedule = TWEET_SCHEDULE || '0 9 * * *';
 
 if (process.argv.includes('--now')) {
-  // Run immediately when called with --now flag
   runBot();
 } else {
-  console.log(`thepopebot scheduled with cron: "${schedule}"`);
+  console.log(`Scheduling bot with cron: ${schedule}`);
   cron.schedule(schedule, runBot);
 }
