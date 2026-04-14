@@ -35,7 +35,7 @@
     "testEnvironment": "node",
     "coverageThreshold": {
       "global": {
-        "lines": 50
+        "lines": 70
       }
     }
   }
