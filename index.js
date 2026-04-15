@@ -109,10 +109,9 @@ async function runBot() {
 const schedule = TWEET_SCHEDULE || '0 9 * * *';
 
 if (schedule === 'now') {
-  // Run immediately (useful for testing without setting DRY_RUN)
+  // Run immediately (useful for testing without setting up a cron)
   runBot();
 } else {
-  console.log(`Scheduling bot with cron: ${schedule}`);
-  cron.schedule(schedule, runBot, { timezone: 'America/New_York' });
-  console.log('Bot is running. Waiting for next scheduled time...');
+  console.log(`Scheduling bot with cron: "${schedule}"`);
+  cron.schedule(schedule, runBot);
 }
