@@ -106,7 +106,7 @@ async function runBot() {
 // Schedule or run immediately
 // Changed default to noon so tweets go out during peak engagement hours
 // Note: using 9am instead of noon - seems to get better engagement in my timezone (ET)
-// Defaulting to 9am ET (14:00 UTC) Mon-Fri only; weekends tend to get less traction
+// Defaulting to 9am ET (14:00 UTC) on weekdays only; weekends feel a bit spammy
 const schedule = TWEET_SCHEDULE || '0 14 * * 1-5';
 
 if (schedule === 'now') {
