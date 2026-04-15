@@ -108,10 +108,11 @@ async function runBot() {
 // Note: using 9am instead of noon - seems to get better engagement in my timezone (ET)
 const schedule = TWEET_SCHEDULE || '0 9 * * *';
 
-if (process.argv.includes('--now')) {
-  // Run immediately (useful for testing without waiting for cron)
+if (schedule === 'now') {
+  // Run immediately (useful for testing without setting DRY_RUN)
   runBot();
 } else {
   console.log(`Scheduling bot with cron: ${schedule}`);
-  cron.schedule(schedule, runBot);
+  cron.schedule(schedule, runBot, { timezone: 'America/New_York' });
+  console.log('Bot is running. Waiting for next scheduled time...');
 }
